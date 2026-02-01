@@ -23,24 +23,12 @@ const COLORS = {
   Low: "#22c55e",
 };
 
-/* ================= CLEAN NUMBER ================= */
-const cleanNumber = (value) => {
-  if (value === null || value === undefined) return 0;
+/* ================= HELPERS ================= */
+const cleanNumber = (value) =>
+  Number(String(value || 0).replace("%", "").replace(",", "").trim()) || 0;
 
-  return (
-    Number(
-      String(value)
-        .replace("%", "")
-        .replace(",", "")
-        .trim()
-    ) || 0
-  );
-};
-
-/* ================= FIND COLUMN ================= */
 const findColumn = (row, keywords) => {
   const cols = Object.keys(row);
-
   return row[
     cols.find((c) =>
       keywords.some((k) =>
@@ -50,28 +38,27 @@ const findColumn = (row, keywords) => {
   ];
 };
 
-
-/* ================= NORMALIZE RISK ================= */
 const normalizeRisk = (value) => {
   if (!value) return "Low";
-
   const v = value.toString().toLowerCase();
-
   if (v.includes("high")) return "High";
   if (v.includes("medium")) return "Medium";
   if (v.includes("low")) return "Low";
-
   return "Low";
 };
 
-/* ================================================= */
-/* ================= MAIN COMPONENT ================= */
 /* ================================================= */
 
 export default function CsvCharts({ data }) {
   if (!Array.isArray(data) || data.length === 0) return null;
 
-  /* ========== NORMALIZED DATA ========== */
+  const isDark = document.body.classList.contains("dark");
+
+  const axisColor = isDark ? "#e5e7eb" : "#374151";
+  const gridColor = isDark ? "#334155" : "#e5e7eb";
+  const tooltipBg = isDark ? "#020617" : "#ffffff";
+  const tooltipText = isDark ? "#ffffff" : "#111827";
+
   const chartData = data.map((row, i) => ({
     name:
       row.student_id ||
@@ -80,43 +67,36 @@ export default function CsvCharts({ data }) {
       `Student ${i + 1}`,
 
     attendance: cleanNumber(
-      findColumn(row, ["attendance", "percent", "present"])
+      findColumn(row, ["attendance", "attend", "percent", "present"])
     ),
 
-    late: cleanNumber(
-      findColumn(row, ["late"])
-    ),
+    late: cleanNumber(findColumn(row, ["late"])),
 
-    leaves: cleanNumber(
-      findColumn(row, ["leave", "absent"])
-    ),
+    leaves: cleanNumber(findColumn(row, ["leave", "absent"])),
 
     discipline: cleanNumber(
-      findColumn(row, ["discipline", "behavior", "score"])
+      findColumn(row, ["discipline", "behavior", "score", "marks"])
     ),
 
-    risk: normalizeRisk(
-      findColumn(row, ["risk"]) || row.risk
-    ),
+    risk: normalizeRisk(findColumn(row, ["risk"]) || row.risk),
   }));
 
-  /* ========== PIE DATA ========== */
-  const riskCount = {
-    High: 0,
-    Medium: 0,
-    Low: 0,
-  };
-
-  chartData.forEach((r) => {
-    riskCount[r.risk]++;
-  });
+  const riskCount = { High: 0, Medium: 0, Low: 0 };
+  chartData.forEach((r) => riskCount[r.risk]++);
 
   const pieData = Object.keys(riskCount).map((k) => ({
     name: k,
     value: riskCount[k],
   }));
 
-  /* ================= UI ================= */
+  const tooltipStyle = {
+    backgroundColor: tooltipBg,
+    border: "none",
+    borderRadius: 10,
+    color: tooltipText,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+  };
+
   return (
     <div
       style={{
@@ -127,15 +107,15 @@ export default function CsvCharts({ data }) {
       }}
     >
       {/* ================= ATTENDANCE ================= */}
-      <div id="attendance-chart">
-      <ChartCard title="Attendance Percentage">
+      <ChartCard dark={isDark} title="Attendance Percentage">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis domain={[0, 100]} />
-            <Tooltip />
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
+
             <Bar
               dataKey="attendance"
               fill="#6366f1"
@@ -144,11 +124,9 @@ export default function CsvCharts({ data }) {
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
-      </div>
 
-      {/* ================= RISK PIE ================= */}
-      <div id="risk-pie-chart">
-      <ChartCard title="Risk Distribution">
+      {/* ================= PIE ================= */}
+      <ChartCard dark={isDark} title="Risk Distribution">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -160,100 +138,73 @@ export default function CsvCharts({ data }) {
               paddingAngle={4}
             >
               {pieData.map((e, i) => (
-                <Cell
-                  key={i}
-                  fill={COLORS[e.name]}
-                />
+                <Cell key={i} fill={COLORS[e.name]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
-      </div>
 
       {/* ================= LINE ================= */}
-      <div id="late-leaves-chart">
-      <ChartCard title="Late vs Leaves">
+      <ChartCard dark={isDark} title="Late vs Leaves">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis tick={{ fill: axisColor }} />
+            <Tooltip contentStyle={tooltipStyle} />
             <Legend />
 
-            <Line
-              dataKey="late"
-              stroke="#f59e0b"
-              strokeWidth={3}
-            />
-            <Line
-              dataKey="leaves"
-              stroke="#ef4444"
-              strokeWidth={3}
-            />
+            <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
+            <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
-      </div>
-      
-      {/* ================= DISCIPLINE ================= */}
-      <div id="discipline-chart">
-      <ChartCard title="Discipline Score">
+
+      {/* ================= AREA ================= */}
+      <ChartCard dark={isDark} title="Discipline Score">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient
-                id="disciplineFill"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop
-                  offset="5%"
-                  stopColor="#22c55e"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="#22c55e"
-                  stopOpacity={0}
-                />
+              <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis domain={[0, 100]} />
-            <Tooltip />
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
+            <Tooltip contentStyle={tooltipStyle} />
 
             <Area
               type="monotone"
               dataKey="discipline"
               stroke="#22c55e"
-              fill="url(#disciplineFill)"
+              fill="url(#disc)"
             />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
-      </div>
     </div>
   );
 }
 
 /* ================= CARD ================= */
 
-function ChartCard({ title, children }) {
+function ChartCard({ title, children, dark }) {
   return (
     <div
       style={{
-        background: "#ffffff",
+        background: dark ? "#020617" : "#ffffff",
+        color: dark ? "#f8fafc" : "#111827",
         padding: 25,
         borderRadius: 18,
-        boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+        boxShadow: dark
+          ? "0 12px 35px rgba(0,0,0,0.6)"
+          : "0 10px 25px rgba(0,0,0,0.06)",
       }}
     >
       <h3 style={{ marginBottom: 15 }}>{title}</h3>
