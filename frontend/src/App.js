@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ManualPredict from "./pages/ManualPredict";
 import UploadCSV from "./pages/UploadCSV";
+import Students from "./pages/Students";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/manual" element={<ManualPredict />} />
         <Route path="/upload" element={<UploadCSV />} />
+        <Route path="/reports" element={<Students />} />
       </Routes>
     </BrowserRouter>
   );

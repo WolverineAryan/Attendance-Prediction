@@ -1,33 +1,23 @@
+import { useContext } from "react";
+import { ThemeContext } from "../context/ThemeContext";
+
 export default function Navbar() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
   return (
     <div
       style={{
-        height: "70px",
-        background: "#ffffff",
+        marginBottom: 25,
         display: "flex",
-        alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 30px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+        alignItems: "center",
       }}
     >
-      <h2 style={{ color: "#4f46e5" }}>AI Attendance Prediction</h2>
+      <h2>Dashboard</h2>
 
-      <div>
-        <span style={{ marginRight: 20 }}>Admin</span>
-        <button
-          style={{
-            background: "#ef4444",
-            color: "#fff",
-            border: "none",
-            padding: "8px 14px",
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          Logout
-        </button>
-      </div>
+      <button onClick={toggleTheme}>
+        {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+      </button>
     </div>
   );
 }

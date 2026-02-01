@@ -1,37 +1,250 @@
+/* ===============================
+   GOOGLE FONT
+================================ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* ===============================
+   GLOBAL RESET
+================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+/* ===============================
+   ROOT THEMES
+================================ */
+.light {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.dark {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* ===============================
+   BODY
+================================ */
 body {
-  background: #f4f6f8;
-  font-family: Arial;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #6366f1, #22c55e);
 }
 
+/* ===============================
+   LAYOUT
+================================ */
 .container {
-  width: 800px;
-  margin: 40px auto;
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px;
 }
 
+/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 30px;
+  background: #4f46e5;
+  color: white;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.navbar button {
+  background: white;
+  color: #4f46e5;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ===============================
+   CARDS
+================================ */
 .card {
   background: white;
-  padding: 25px;
-  margin-bottom: 20px;
-  border-radius: 8px;
+  padding: 28px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
 }
 
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 40px rgba(0, 0, 0, 0.12);
 }
 
-button {
+.dark .card {
+  background: #1e293b;
+}
+
+/* ===============================
+   KPI GRID
+================================ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+  margin-bottom: 30px;
+}
+
+/* ===============================
+   INPUTS
+================================ */
+input,
+select {
   width: 100%;
-  padding: 12px;
-  background: #007bff;
+  padding: 12px 14px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+  font-size: 15px;
+}
+
+input:focus {
+  border-color: #6366f1;
+}
+
+/* Dark mode inputs */
+.dark input,
+.dark select {
+  background: #1e293b;
   color: white;
-  border: none;
-  font-size: 16px;
+  border: 1px solid #334155;
 }
 
-.result {
-  margin-top: 15px;
-  background: #e8f5e9;
-  padding: 10px;
+/* ===============================
+   BUTTONS
+================================ */
+button {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #4f46e5;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.25s ease;
+}
+
+button:hover {
+  background: #4338ca;
+}
+
+.dark button {
+  background: #334155;
+  color: white;
+}
+
+/* ===============================
+   TABLE
+================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+thead {
+  background: #4f46e5;
+  color: white;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: center;
+}
+
+tbody tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+.dark table {
+  background: #1e293b;
+  color: white;
+}
+
+.dark tbody tr:nth-child(even) {
+  background: #334155;
+}
+
+/* ===============================
+   BADGES
+================================ */
+.badge {
+  padding: 5px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge.high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge.medium {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.badge.low {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ===============================
+   UPLOAD AREA
+================================ */
+.upload-box {
+  margin-top: 30px;
+  padding: 60px;
+  border: 2px dashed #6366f1;
+  border-radius: 22px;
+  text-align: center;
+  background: #eef2ff;
+  transition: 0.3s ease;
+}
+
+.upload-box:hover {
+  background: #e0e7ff;
+}
+
+.dark .upload-box {
+  background: #1e293b;
+  border-color: #818cf8;
+}
+
+/* ===============================
+   ANIMATIONS
+================================ */
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

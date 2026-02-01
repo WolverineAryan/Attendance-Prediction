@@ -11,6 +11,7 @@ export default function ManualPredict() {
   });
 
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -20,97 +21,116 @@ export default function ManualPredict() {
   };
 
   const predict = async () => {
-    const res = await axios.post(
-      "http://localhost:5000/predict-manual",
-      {
-        attendance: Number(form.attendance),
-        late: Number(form.late),
-        leaves: Number(form.leaves),
-        discipline: Number(form.discipline),
-      }
-    );
+    setLoading(true);
+    setResult(null);
 
-    setResult(res.data);
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/predict-manual",
+        {
+          attendance: Number(form.attendance),
+          late: Number(form.late),
+          leaves: Number(form.leaves),
+          discipline: Number(form.discipline),
+        }
+      );
+
+      setResult(res.data);
+    } catch (err) {
+      alert("Backend not responding");
+    }
+
+    setLoading(false);
   };
 
   return (
     <Layout>
-      <h1>Manual Attendance Prediction</h1>
+      <h1 style={{ marginBottom: 25 }}>
+        Manual Attendance Prediction
+      </h1>
 
+      {/* FORM CARD */}
       <div
-        style={{
-          maxWidth: 500,
-          marginTop: 30,
-          padding: 30,
-          background: "#fff",
-          borderRadius: 16,
-          boxShadow: "0 10px 20px rgba(0,0,0,0.05)",
-        }}
+        className="card fade-in"
+        style={{ maxWidth: 520 }}
       >
-        {["attendance", "late", "leaves", "discipline"].map((f) => (
-          <div key={f} style={{ marginBottom: 15 }}>
-            <label style={{ fontWeight: 600 }}>
-              {f.toUpperCase()}
-            </label>
-            <input
-              type="number"
-              name={f}
-              value={form[f]}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: 10,
-                marginTop: 6,
-                borderRadius: 8,
-                border: "1px solid #ddd",
-              }}
-            />
-          </div>
-        ))}
+        <label>Attendance %</label>
+        <input
+          name="attendance"
+          type="number"
+          placeholder="e.g. 75"
+          onChange={handleChange}
+        />
+
+        <label>Late Days</label>
+        <input
+          name="late"
+          type="number"
+          placeholder="e.g. 5"
+          onChange={handleChange}
+        />
+
+        <label>Total Leaves</label>
+        <input
+          name="leaves"
+          type="number"
+          placeholder="e.g. 3"
+          onChange={handleChange}
+        />
+
+        <label>Discipline Score</label>
+        <input
+          name="discipline"
+          type="number"
+          placeholder="e.g. 15"
+          onChange={handleChange}
+        />
 
         <button
           onClick={predict}
+          disabled={loading}
+          style={{ marginTop: 15 }}
+        >
+          {loading ? "Predicting..." : "Predict Risk"}
+        </button>
+      </div>
+
+      {/* RESULT */}
+      {result && (
+        <div
+          className="card fade-in"
           style={{
-            marginTop: 20,
-            width: "100%",
-            padding: 14,
-            background: "#4f46e5",
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            fontSize: 16,
-            cursor: "pointer",
+            maxWidth: 520,
+            marginTop: 30,
+            borderLeft:
+              result.risk === "High"
+                ? "6px solid #ef4444"
+                : result.risk === "Medium"
+                ? "6px solid #f59e0b"
+                : "6px solid #22c55e",
           }}
         >
-          Predict Risk
-        </button>
+          <h2>
+            Risk Level:
+            <span
+              className={`badge ${
+                result.risk === "High"
+                  ? "high"
+                  : result.risk === "Medium"
+                  ? "medium"
+                  : "low"
+              }`}
+              style={{ marginLeft: 12 }}
+            >
+              {result.risk}
+            </span>
+          </h2>
 
-        {result && (
-          <div
-            style={{
-              marginTop: 25,
-              padding: 20,
-              borderRadius: 12,
-              background:
-                result.risk === "High"
-                  ? "#fee2e2"
-                  : result.risk === "Medium"
-                  ? "#ffedd5"
-                  : "#dcfce7",
-              color:
-                result.risk === "High"
-                  ? "#b91c1c"
-                  : result.risk === "Medium"
-                  ? "#c2410c"
-                  : "#15803d",
-              fontWeight: 700,
-            }}
-          >
-            <h2>Risk: {result.risk}</h2>
-            <p>{result.reason}</p>
-          </div>
-        )}
-      </div>
+          <p style={{ marginTop: 10 }}>
+            {result.reason}
+          </p>
+        </div>
+      )}
     </Layout>
   );
 }
