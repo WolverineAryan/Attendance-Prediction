@@ -4,6 +4,7 @@ import Charts from "../components/Charts";
 import CsvCharts from "../components/CSVCharts";
 import SummaryCards from "../components/SummaryCards";
 import { DataContext } from "../context/DataContext";
+import exportPDF from "../utils/exportPDF";
 
 export default function Dashboard() {
   // ✅ GET CSV DATA FROM CONTEXT
@@ -69,4 +70,20 @@ function Card({ title, value, color = "#4f46e5" }) {
       <h1 style={{ color }}>{value}</h1>
     </div>
   );
+  
 }
+<button
+  onClick={() => exportPDF(csvData)}
+  style={{
+    marginBottom: 25,
+    padding: "12px 26px",
+    background: "#6366f1",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontSize: 15
+  }}
+>
+  📄 Download PDF Report
+</button>
