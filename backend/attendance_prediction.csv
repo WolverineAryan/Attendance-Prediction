@@ -1,0 +1,6 @@
+studentid,attendancepercentage,latedays,leaves,disciplinescore,attendancerisk,risk,risklevel
+103,60,12,8,20,1,High,High
+105,40,20,15,35,1,High,High
+107,55,15,10,25,1,High,High
+109,68,9,6,15,1,Medium,High
+110,30,25,18,43,1,High,High

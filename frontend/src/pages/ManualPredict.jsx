@@ -21,26 +21,49 @@ export default function ManualPredict() {
   };
 
   const predict = async () => {
-    setLoading(true);
-    setResult(null);
+    const { attendance, late, leaves, discipline } = form;
+
+    // ✅ empty validation
+    if (
+      attendance === "" ||
+      late === "" ||
+      leaves === "" ||
+      discipline === ""
+    ) {
+      alert("⚠️ Please enter all details");
+      return;
+    }
+
+    // ✅ numeric validation
+    if (
+      attendance < 0 || attendance > 100 ||
+      late < 0 ||
+      leaves < 0 ||
+      discipline < 0
+    ) {
+      alert("⚠️ Please enter valid numeric values");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const res = await axios.post(
         "http://localhost:5000/predict-manual",
         {
-          attendance: Number(form.attendance),
-          late: Number(form.late),
-          leaves: Number(form.leaves),
-          discipline: Number(form.discipline),
+          attendance: Number(attendance),
+          late: Number(late),
+          leaves: Number(leaves),
+          discipline: Number(discipline),
         }
       );
 
       setResult(res.data);
     } catch (err) {
-      alert("Backend not responding");
+      alert("Prediction failed. Check backend.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -49,15 +72,13 @@ export default function ManualPredict() {
         Manual Attendance Prediction
       </h1>
 
-      {/* FORM CARD */}
-      <div
-        className="card fade-in"
-        style={{ maxWidth: 520 }}
-      >
+      {/* FORM */}
+      <div className="card fade-in" style={{ maxWidth: 520 }}>
         <label>Attendance %</label>
         <input
           name="attendance"
           type="number"
+          value={form.attendance}
           placeholder="e.g. 75"
           onChange={handleChange}
         />
@@ -66,6 +87,7 @@ export default function ManualPredict() {
         <input
           name="late"
           type="number"
+          value={form.late}
           placeholder="e.g. 5"
           onChange={handleChange}
         />
@@ -74,6 +96,7 @@ export default function ManualPredict() {
         <input
           name="leaves"
           type="number"
+          value={form.leaves}
           placeholder="e.g. 3"
           onChange={handleChange}
         />
@@ -82,6 +105,7 @@ export default function ManualPredict() {
         <input
           name="discipline"
           type="number"
+          value={form.discipline}
           placeholder="e.g. 15"
           onChange={handleChange}
         />

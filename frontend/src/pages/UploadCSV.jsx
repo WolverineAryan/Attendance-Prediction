@@ -18,12 +18,10 @@ export default function UploadCSV() {
   formData.append("file", file);
 
   const res = await axios.post(
-    "http://localhost:5000/predict-csv",
-    formData,
-    {
-      responseType: "blob", // 🔥 REQUIRED
-    }
-  );
+  "http://localhost:5000/predict-csv",
+  formData,
+  { responseType: "blob" }
+);
 
   const text = await res.data.text();
 

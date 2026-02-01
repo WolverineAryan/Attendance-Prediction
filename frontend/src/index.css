@@ -248,3 +248,60 @@ tbody tr:nth-child(even) {
     transform: translateY(0);
   }
 }
+.sidebar a {
+  transition: all 0.25s ease;
+}
+
+.sidebar a:hover {
+  background: #1f2937;
+  transform: translateX(4px);
+}
+
+button {
+  transition: 0.25s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+}tbody tr:hover {
+  background: #e0e7ff;
+}
+
+.dark tbody tr:hover {
+  background: #334155;
+}
+
+/* ============================
+   LOADING SKELETON
+============================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e5e7eb 25%,
+    #f3f4f6 37%,
+    #e5e7eb 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
