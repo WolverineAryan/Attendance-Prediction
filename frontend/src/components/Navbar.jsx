@@ -17,10 +17,10 @@ export default function Navbar() {
         marginBottom: 25,
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "center", color: "blueviolet"
       }}
     >
-      <h2>Dashboard</h2>
+      <h2> </h2>
 
       <div style={{ display: "flex", gap: 15 }}>
         <button onClick={toggleTheme}>

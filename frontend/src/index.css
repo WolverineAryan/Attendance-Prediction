@@ -305,3 +305,97 @@ h3 {
     background-position: 400px 0;
   }
 }
+/* center whole page */
+.page-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* form + result card */
+.center-card {
+  width: 520px;
+  max-width: 95%;
+  text-align: left;
+}
+
+/* inputs */
+.center-card input {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* button center */
+.center-card button {
+  width: 100%;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+/* result text */
+.result-center {
+  text-align: center;
+}
+/* ---------- GLASSMORPHISM CARD ---------- */
+.glass-card {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border-radius: 20px;
+  padding: 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25);
+
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.35);
+}
+
+/* inputs */
+.glass-card input {
+  background: #1111111b;
+  border: none;
+  outline: none;
+  padding: 12px;
+  border-radius: 10px;
+  color: #111;
+  font-size: 15px;
+}
+
+.glass-card input::placeholder {
+  color: #555;
+}
+
+/* button */
+.glass-card button {
+  background: linear-gradient(135deg, #059dea, #16ace3);
+  border: none;
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.glass-card button:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+body {
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #22c55e
+  );
+}

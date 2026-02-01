@@ -16,36 +16,99 @@ import {
   Area,
 } from "recharts";
 
+/* ================= COLORS ================= */
 const COLORS = {
   High: "#ef4444",
   Medium: "#f59e0b",
   Low: "#22c55e",
 };
 
+/* ================= CLEAN NUMBER ================= */
+const cleanNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+
+  return (
+    Number(
+      String(value)
+        .replace("%", "")
+        .replace(",", "")
+        .trim()
+    ) || 0
+  );
+};
+
+/* ================= FIND COLUMN ================= */
+const findColumn = (row, keywords) => {
+  const cols = Object.keys(row);
+
+  return row[
+    cols.find((c) =>
+      keywords.some((k) =>
+        c.toLowerCase().replace(/\s|%|_/g, "").includes(k)
+      )
+    )
+  ];
+};
+
+
+/* ================= NORMALIZE RISK ================= */
+const normalizeRisk = (value) => {
+  if (!value) return "Low";
+
+  const v = value.toString().toLowerCase();
+
+  if (v.includes("high")) return "High";
+  if (v.includes("medium")) return "Medium";
+  if (v.includes("low")) return "Low";
+
+  return "Low";
+};
+
+/* ================================================= */
+/* ================= MAIN COMPONENT ================= */
+/* ================================================= */
+
 export default function CsvCharts({ data }) {
   if (!Array.isArray(data) || data.length === 0) return null;
 
-  // ================= SAFE DATA =================
+  /* ========== NORMALIZED DATA ========== */
   const chartData = data.map((row, i) => ({
-    name: row.student_id
-      ? String(row.student_id)
-      : `Student ${i + 1}`,
+    name:
+      row.student_id ||
+      row.Student_ID ||
+      row.id ||
+      `Student ${i + 1}`,
 
-    attendance: Number(row.attendance) || 0,
-    late: Number(row.late) || 0,
-    leaves: Number(row.leaves) || 0,
-    discipline: Number(row.discipline) || 0,
+    attendance: cleanNumber(
+      findColumn(row, ["attendance", "percent", "present"])
+    ),
 
-    risk: row.risk || "Low",
+    late: cleanNumber(
+      findColumn(row, ["late"])
+    ),
+
+    leaves: cleanNumber(
+      findColumn(row, ["leave", "absent"])
+    ),
+
+    discipline: cleanNumber(
+      findColumn(row, ["discipline", "behavior", "score"])
+    ),
+
+    risk: normalizeRisk(
+      findColumn(row, ["risk"]) || row.risk
+    ),
   }));
 
-  // ================= PIE =================
-  const riskCount = { High: 0, Medium: 0, Low: 0 };
+  /* ========== PIE DATA ========== */
+  const riskCount = {
+    High: 0,
+    Medium: 0,
+    Low: 0,
+  };
 
   chartData.forEach((r) => {
-    if (riskCount[r.risk] !== undefined) {
-      riskCount[r.risk]++;
-    }
+    riskCount[r.risk]++;
   });
 
   const pieData = Object.keys(riskCount).map((k) => ({
@@ -53,6 +116,7 @@ export default function CsvCharts({ data }) {
     value: riskCount[k],
   }));
 
+  /* ================= UI ================= */
   return (
     <div
       style={{
@@ -62,13 +126,14 @@ export default function CsvCharts({ data }) {
         marginTop: 40,
       }}
     >
-      {/* ================= 1. BAR ================= */}
+      {/* ================= ATTENDANCE ================= */}
+      <div id="attendance-chart">
       <ChartCard title="Attendance Percentage">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis domain={[0, 100]} />
             <Tooltip />
             <Legend />
             <Bar
@@ -79,8 +144,10 @@ export default function CsvCharts({ data }) {
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
+      </div>
 
-      {/* ================= 2. PIE ================= */}
+      {/* ================= RISK PIE ================= */}
+      <div id="risk-pie-chart">
       <ChartCard title="Risk Distribution">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -88,11 +155,15 @@ export default function CsvCharts({ data }) {
               data={pieData}
               dataKey="value"
               nameKey="name"
-              innerRadius={70}
-              outerRadius={120}
+              innerRadius={60}
+              outerRadius={110}
+              paddingAngle={4}
             >
               {pieData.map((e, i) => (
-                <Cell key={i} fill={COLORS[e.name]} />
+                <Cell
+                  key={i}
+                  fill={COLORS[e.name]}
+                />
               ))}
             </Pie>
             <Tooltip />
@@ -100,8 +171,10 @@ export default function CsvCharts({ data }) {
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
+      </div>
 
-      {/* ================= 3. LINE ================= */}
+      {/* ================= LINE ================= */}
+      <div id="late-leaves-chart">
       <ChartCard title="Late vs Leaves">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
@@ -110,14 +183,13 @@ export default function CsvCharts({ data }) {
             <YAxis />
             <Tooltip />
             <Legend />
+
             <Line
-              type="monotone"
               dataKey="late"
               stroke="#f59e0b"
               strokeWidth={3}
             />
             <Line
-              type="monotone"
               dataKey="leaves"
               stroke="#ef4444"
               strokeWidth={3}
@@ -125,37 +197,55 @@ export default function CsvCharts({ data }) {
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
-
-      {/* ================= 4. AREA ================= */}
+      </div>
+      
+      {/* ================= DISCIPLINE ================= */}
+      <div id="discipline-chart">
       <ChartCard title="Discipline Score">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              <linearGradient
+                id="disciplineFill"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor="#22c55e"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="#22c55e"
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
 
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis domain={[0, 100]} />
             <Tooltip />
 
             <Area
               type="monotone"
               dataKey="discipline"
               stroke="#22c55e"
-              fill="url(#disc)"
+              fill="url(#disciplineFill)"
             />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
+      </div>
     </div>
   );
 }
 
 /* ================= CARD ================= */
+
 function ChartCard({ title, children }) {
   return (
     <div

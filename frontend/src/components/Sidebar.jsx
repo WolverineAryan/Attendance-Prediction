@@ -9,14 +9,13 @@ export default function Sidebar() {
     { name: "Dashboard", path: "/dashboard", icon: "📊" },
     { name: "Manual", path: "/manual", icon: "✍️" },
     { name: "CSV Upload", path: "/upload", icon: "📁" },
-    { name: "Students", path: "/reports", icon: "👨‍🎓" },
   ];
 
   return (
     <div
       style={{
         width: collapsed ? 80 : 230,
-        background: "#111827",
+        background: "#020815",
         color: "white",
         minHeight: "100vh",
         padding: 20,

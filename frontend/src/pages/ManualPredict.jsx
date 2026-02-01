@@ -23,7 +23,6 @@ export default function ManualPredict() {
   const predict = async () => {
     const { attendance, late, leaves, discipline } = form;
 
-    // ✅ empty validation
     if (
       attendance === "" ||
       late === "" ||
@@ -34,14 +33,14 @@ export default function ManualPredict() {
       return;
     }
 
-    // ✅ numeric validation
     if (
-      attendance < 0 || attendance > 100 ||
+      attendance < 0 ||
+      attendance > 100 ||
       late < 0 ||
       leaves < 0 ||
       discipline < 0
     ) {
-      alert("⚠️ Please enter valid numeric values");
+      alert("⚠️ Please enter valid numbers");
       return;
     }
 
@@ -59,7 +58,7 @@ export default function ManualPredict() {
       );
 
       setResult(res.data);
-    } catch (err) {
+    } catch {
       alert("Prediction failed. Check backend.");
     } finally {
       setLoading(false);
@@ -68,93 +67,91 @@ export default function ManualPredict() {
 
   return (
     <Layout>
-      <h1 style={{ marginBottom: 25 }}>
-        Manual Attendance Prediction
-      </h1>
+      <div className="page-center">
 
-      {/* FORM */}
-      <div className="card fade-in" style={{ maxWidth: 520 }}>
-        <label>Attendance %</label>
-        <input
-          name="attendance"
-          type="number"
-          value={form.attendance}
-          placeholder="e.g. 75"
-          onChange={handleChange}
-        />
+        <h1 style={{ marginBottom: 30 }}>
+          Manual Attendance Prediction
+        </h1>
 
-        <label>Late Days</label>
-        <input
-          name="late"
-          type="number"
-          value={form.late}
-          placeholder="e.g. 5"
-          onChange={handleChange}
-        />
+        {/* FORM CARD */}
+        <div className="glass-card fade-in center-card">
+          <label>Attendance %</label>
+          <input
+            name="attendance"
+            type="number"
+            value={form.attendance}
+            placeholder="e.g. 75"
+            onChange={handleChange}
+          />
 
-        <label>Total Leaves</label>
-        <input
-          name="leaves"
-          type="number"
-          value={form.leaves}
-          placeholder="e.g. 3"
-          onChange={handleChange}
-        />
+          <label>Late Days</label>
+          <input
+            name="late"
+            type="number"
+            value={form.late}
+            placeholder="e.g. 5"
+            onChange={handleChange}
+          />
 
-        <label>Discipline Score</label>
-        <input
-          name="discipline"
-          type="number"
-          value={form.discipline}
-          placeholder="e.g. 15"
-          onChange={handleChange}
-        />
+          <label>Total Leaves</label>
+          <input
+            name="leaves"
+            type="number"
+            value={form.leaves}
+            placeholder="e.g. 3"
+            onChange={handleChange}
+          />
 
-        <button
-          onClick={predict}
-          disabled={loading}
-          style={{ marginTop: 15 }}
-        >
-          {loading ? "Predicting..." : "Predict Risk"}
-        </button>
-      </div>
+          <label>Discipline Score</label>
+          <input
+            name="discipline"
+            type="number"
+            value={form.discipline}
+            placeholder="e.g. 15"
+            onChange={handleChange}
+          />
 
-      {/* RESULT */}
-      {result && (
-        <div
-          className="card fade-in"
-          style={{
-            maxWidth: 520,
-            marginTop: 30,
-            borderLeft:
-              result.risk === "High"
-                ? "6px solid #ef4444"
-                : result.risk === "Medium"
-                ? "6px solid #f59e0b"
-                : "6px solid #22c55e",
-          }}
-        >
-          <h2>
-            Risk Level:
-            <span
-              className={`badge ${
-                result.risk === "High"
-                  ? "high"
-                  : result.risk === "Medium"
-                  ? "medium"
-                  : "low"
-              }`}
-              style={{ marginLeft: 12 }}
-            >
-              {result.risk}
-            </span>
-          </h2>
-
-          <p style={{ marginTop: 10 }}>
-            {result.reason}
-          </p>
+          <button onClick={predict} disabled={loading}>
+            {loading ? "Predicting..." : "Predict Risk"}
+          </button>
         </div>
-      )}
+
+        {/* RESULT CARD */}
+        {result && (
+          
+            <div
+  className="glass-card fade-in center-card result-center"
+  style={{
+    marginTop: 30,
+    borderLeft:
+      result.risk === "High"
+        ? "6px solid #ef4444"
+        : result.risk === "Medium"
+        ? "6px solid #f59e0b"
+        : "6px solid #22c55e",
+  }}>
+            <h2>
+              Risk Level:
+              <span
+                className={`badge ${
+                  result.risk === "High"
+                    ? "high"
+                    : result.risk === "Medium"
+                    ? "medium"
+                    : "low"
+                }`}
+                style={{ marginLeft: 12 }}
+              >
+                {result.risk}
+              </span>
+            </h2>
+
+            <p style={{ marginTop: 12 }}>
+              {result.reason}
+            </p>
+          </div>
+        )}
+      </div>
     </Layout>
   );
 }
