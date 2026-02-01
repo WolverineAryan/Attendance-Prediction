@@ -48,7 +48,7 @@ export default function ManualPredict() {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5000/predict-manual",
+        "https://attendance-prediction.onrender.com",
         {
           attendance: Number(attendance),
           late: Number(late),

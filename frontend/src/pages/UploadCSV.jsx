@@ -18,7 +18,7 @@ export default function UploadCSV() {
   formData.append("file", file);
 
   const res = await axios.post(
-  "http://localhost:5000/predict-csv",
+  "https://attendance-prediction.onrender.com/predict-csv",
   formData,
   { responseType: "blob" }
 );
