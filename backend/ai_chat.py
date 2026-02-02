@@ -1,60 +1,55 @@
-from flask import Blueprint, request, jsonify
+import requests
 from langchain_community.llms import Ollama
-from langchain_community.document_loaders import CSVLoader, PyPDFLoader
-from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OllamaEmbeddings
-import os
 
-ai = Blueprint("ai", __name__)
+# Ollama API URL
+OLLAMA_URL = "http://localhost:11434/api/generate"
 
-VECTOR_DB = "vector_db"
+# Local AI model instance (optional direct use)
+ai = Ollama(model="llama3")
 
-@ai.route("/ai/upload", methods=["POST"])
-def upload_file():
-    file = request.files["file"]
-    path = f"uploads/{file.filename}"
-    file.save(path)
+# Simple direct question function
+def ask_ai(question):
+    return ai(question)
 
-    if file.filename.endswith(".csv"):
-        loader = CSVLoader(path)
-    else:
-        loader = PyPDFLoader(path)
+# Main function used by chatbot
+def ask_ollama(prompt, csv_text):
+    try:
+        full_prompt = f"""
+You are a smart assistant for attendance analytics.
 
-    docs = loader.load()
+Use ONLY the data below to answer.
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=100
-    )
-    chunks = splitter.split_documents(docs)
+CSV DATA:
+{csv_text}
 
-    db = Chroma.from_documents(
-        chunks,
-        OllamaEmbeddings(model="llama3"),
-        persist_directory=VECTOR_DB
-    )
+User question: {prompt}
 
-    db.persist()
-    return jsonify({"status": "File indexed successfully"})
+INSTRUCTIONS:
+-your name is Andy
+- Give only key facts.
+- give short explanations.
+- Be concise.
 
-@ai.route("/ai/chat", methods=["POST"])
-def chat():
-    question = request.json["question"]
+Answer:
+"""
 
-    db = Chroma(
-        persist_directory=VECTOR_DB,
-        embedding_function=OllamaEmbeddings(model="llama3")
-    )
+        payload = {
+            "model": "llama3",
+            "prompt": full_prompt,
+            "stream": False
+        }
 
-    docs = db.similarity_search(question, k=3)
+        response = requests.post(OLLAMA_URL, json=payload)
 
-    context = "\n".join([d.page_content for d in docs])
+        if response.status_code != 200:
+            print("OLLAMA ERROR:", response.text)
+            return "AI server error"
 
-    llm = Ollama(model="llama3")
+        data = response.json()
 
-    answer = llm(
-        f"Answer ONLY using this data:\n{context}\n\nQuestion: {question}"
-    )
+        return data.get("response", "No AI response")
 
-    return jsonify({"answer": answer})
+    except Exception as e:
+        print("CHATBOT EXCEPTION:", e)
+        return "No response (Ollama not reachable)"
+

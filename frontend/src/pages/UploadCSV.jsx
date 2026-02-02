@@ -4,7 +4,8 @@ import { DataContext } from "../context/DataContext";
 import Papa from "papaparse";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+console.log("API_URL =", API_URL);
 
 export default function UploadCSV() {
   const { csvData, setCsvData } = useContext(DataContext);
@@ -39,7 +40,7 @@ export default function UploadCSV() {
       );
 
       const csvText = res.data;
-
+      
       // (Optional) Store uploaded data on backend for chatbot
       await axios.post(`${API_URL}/upload-data`, {
         text: csvText,

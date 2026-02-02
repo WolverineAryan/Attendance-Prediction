@@ -3,13 +3,14 @@ from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import joblib
-import os
-from ai_chat import ai
-from chatbot import ask_ollama
+
+from ai_chat import ask_ollama, ask_ai
 
 app = Flask(__name__)
-uploaded_csv_text = ""
 CORS(app)
+
+uploaded_csv_text = ""
+
 print("✅ app.py loaded")
 
 # ===============================
@@ -27,7 +28,7 @@ def home():
 
 
 # ===============================
-# ✅ MANUAL PREDICTION
+# MANUAL PREDICTION
 # ===============================
 @app.route("/predict-manual", methods=["POST"])
 def predict_manual():
@@ -40,9 +41,9 @@ def predict_manual():
 
     X = np.array([[attendance, late, leaves, discipline]])
 
-    pred = model.predict(X)[0]
+    model.predict(X)
 
-    # ---------- RULE OVERRIDE ----------
+    # RULE BASED OVERRIDE LOGIC
     if attendance < 50 or leaves > 8 or late > 12:
         risk = "High"
         reason = "Very low attendance or excessive leaves/late"
@@ -54,19 +55,24 @@ def predict_manual():
         risk = "Low"
         reason = "Good attendance record"
 
-
     return jsonify({
         "risk": risk,
         "reason": reason
     })
 
+
 # ===============================
-# ✅ CSV PREDICTION
-@app.route("/predict-csv", methods=["POST"])    
+# CSV PREDICTION
+# ===============================
+@app.route("/predict-csv", methods=["POST"])
 def predict_csv():
     try:
         file = request.files["file"]
         df = pd.read_csv(file)
+
+        # ---- FIX: Remove existing risk column ----
+        if "risk" in df.columns:
+            df = df.drop(columns=["risk"])
 
         df.columns = (
             df.columns.str.lower()
@@ -128,25 +134,33 @@ def predict_csv():
         return jsonify({"error": str(e)}), 500
 
 
-app.register_blueprint(ai)
-
 # ===============================
-# ✅ UPLOAD DATA FOR CHATBOT
+# STORE UPLOADED CSV DATA FOR AI
 # ===============================
 @app.route("/upload-data", methods=["POST"])
 def upload_data():
     global uploaded_csv_text
+
     uploaded_csv_text = request.json.get("text", "")
-    return jsonify({"message": "data stored"})
+
+    return jsonify({"message": "CSV data stored for AI chatbot"})
 
 # ===============================
-# ✅ CHAT WITH CHATBOT
+# CHATBOT ROUTE
 # ===============================
 @app.route("/chat", methods=["POST"])
 def chat():
     question = request.json.get("question")
+
+    if not uploaded_csv_text:
+        return jsonify({
+            "reply": "Please upload a CSV file first before asking questions."
+        })
+
     answer = ask_ollama(question, uploaded_csv_text)
+
     return jsonify({"reply": answer})
+
 
 # ===============================
 # RUN SERVER

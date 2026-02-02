@@ -6,7 +6,6 @@ import KpiCards from "../components/KpiCards";
 import CsvCharts from "../components/CSVCharts"; 
 import { exportDashboardAsZip } from "../utils/exportDashboardZip";
 import Chatbot from "../components/ChatBot";
-<Chatbot />
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
@@ -39,6 +38,7 @@ export default function Dashboard() {
       {csvData.length > 0 && (
         <CsvCharts data={csvData} />
       )}
+      <Chatbot />
     </Layout>
   );
   
