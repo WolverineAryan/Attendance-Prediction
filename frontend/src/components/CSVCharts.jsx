@@ -107,6 +107,7 @@ export default function CsvCharts({ data }) {
       }}
     >
       {/* ================= ATTENDANCE ================= */}
+      <div id="attendance-chart">
       <ChartCard dark={isDark} title="Attendance Percentage">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
@@ -124,8 +125,10 @@ export default function CsvCharts({ data }) {
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
+      </div>
 
       {/* ================= PIE ================= */}
+      <div id='risk-pie-chart'>
       <ChartCard dark={isDark} title="Risk Distribution">
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -146,8 +149,10 @@ export default function CsvCharts({ data }) {
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
+    </div>
 
       {/* ================= LINE ================= */}
+    <div id='late-leaves-chart'>
       <ChartCard dark={isDark} title="Late vs Leaves">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
@@ -156,14 +161,15 @@ export default function CsvCharts({ data }) {
             <YAxis tick={{ fill: axisColor }} />
             <Tooltip contentStyle={tooltipStyle} />
             <Legend />
-
             <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
             <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
+    </div>
 
       {/* ================= AREA ================= */}
+    <div id='discipline-chart'>
       <ChartCard dark={isDark} title="Discipline Score">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
@@ -173,12 +179,10 @@ export default function CsvCharts({ data }) {
                 <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
               </linearGradient>
             </defs>
-
             <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
             <XAxis dataKey="name" tick={{ fill: axisColor }} />
             <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
             <Tooltip contentStyle={tooltipStyle} />
-
             <Area
               type="monotone"
               dataKey="discipline"
@@ -188,6 +192,7 @@ export default function CsvCharts({ data }) {
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
+    </div>
     </div>
   );
 }

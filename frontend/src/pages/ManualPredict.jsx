@@ -2,6 +2,11 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import axios from "axios";
 
+/* ✅ backend url */
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "https://attendance-prediction.onrender.com";
+
 export default function ManualPredict() {
   const [form, setForm] = useState({
     attendance: "",
@@ -13,6 +18,7 @@ export default function ManualPredict() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  /* ================= INPUT CHANGE ================= */
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -20,9 +26,11 @@ export default function ManualPredict() {
     });
   };
 
+  /* ================= PREDICT ================= */
   const predict = async () => {
     const { attendance, late, leaves, discipline } = form;
 
+    // ✅ empty validation
     if (
       attendance === "" ||
       late === "" ||
@@ -33,6 +41,7 @@ export default function ManualPredict() {
       return;
     }
 
+    // ✅ numeric validation
     if (
       attendance < 0 ||
       attendance > 100 ||
@@ -40,7 +49,7 @@ export default function ManualPredict() {
       leaves < 0 ||
       discipline < 0
     ) {
-      alert("⚠️ Please enter valid numbers");
+      alert("⚠️ Please enter valid numeric values");
       return;
     }
 
@@ -48,32 +57,37 @@ export default function ManualPredict() {
       setLoading(true);
 
       const res = await axios.post(
-        "https://attendance-prediction.onrender.com/predict-manual",
+        `${API_URL}/predict-manual`,
         {
           attendance: Number(attendance),
           late: Number(late),
           leaves: Number(leaves),
           discipline: Number(discipline),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
       setResult(res.data);
-    } catch {
-      alert("Prediction failed. Check backend.");
+    } catch (err) {
+      alert("❌ Prediction failed. Backend not reachable.");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ================= UI ================= */
   return (
     <Layout>
       <div className="page-center">
-
         <h1 style={{ marginBottom: 30 }}>
           Manual Attendance Prediction
         </h1>
 
-        {/* FORM CARD */}
+        {/* ================= FORM ================= */}
         <div className="glass-card fade-in center-card">
           <label>Attendance %</label>
           <input
@@ -116,20 +130,20 @@ export default function ManualPredict() {
           </button>
         </div>
 
-        {/* RESULT CARD */}
+        {/* ================= RESULT ================= */}
         {result && (
-          
-            <div
-  className="glass-card fade-in center-card result-center"
-  style={{
-    marginTop: 30,
-    borderLeft:
-      result.risk === "High"
-        ? "6px solid #ef4444"
-        : result.risk === "Medium"
-        ? "6px solid #f59e0b"
-        : "6px solid #22c55e",
-  }}>
+          <div
+            className="glass-card fade-in center-card result-center"
+            style={{
+              marginTop: 30,
+              borderLeft:
+                result.risk === "High"
+                  ? "6px solid #ef4444"
+                  : result.risk === "Medium"
+                  ? "6px solid #f59e0b"
+                  : "6px solid #22c55e",
+            }}
+          >
             <h2>
               Risk Level:
               <span
