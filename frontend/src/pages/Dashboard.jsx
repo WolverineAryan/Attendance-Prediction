@@ -5,6 +5,8 @@ import Layout from "../components/Layout";
 import KpiCards from "../components/KpiCards";
 import CsvCharts from "../components/CSVCharts"; 
 import { exportDashboardAsZip } from "../utils/exportDashboardZip";
+import Chatbot from "../components/ChatBot";
+<Chatbot />
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
@@ -15,6 +17,8 @@ export default function Dashboard() {
 
       {/* ✅ KPI CARDS (ONLY ONCE) */}
       <KpiCards data={csvData} />
+
+      
 <button
   onClick={exportDashboardAsZip}
   style={{
@@ -37,4 +41,5 @@ export default function Dashboard() {
       )}
     </Layout>
   );
+  
 }

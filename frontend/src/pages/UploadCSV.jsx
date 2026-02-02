@@ -4,8 +4,7 @@ import { DataContext } from "../context/DataContext";
 import Papa from "papaparse";
 import axios from "axios";
 
-/* ✅ change only this when backend URL changes */
-const API_URL = "https://attendance-prediction.onrender.com";
+const API_URL = "http://localhost:5000";
 
 export default function UploadCSV() {
   const { csvData, setCsvData } = useContext(DataContext);
@@ -27,6 +26,7 @@ export default function UploadCSV() {
     formData.append("file", file);
 
     try {
+      // Send file to backend for prediction
       const res = await axios.post(
         `${API_URL}/predict-csv`,
         formData,
@@ -34,12 +34,19 @@ export default function UploadCSV() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          responseType: "text", // 🔥 VERY IMPORTANT
+          responseType: "text", // 🔥 backend returns CSV text
         }
       );
 
-      // backend returns CSV text
-      Papa.parse(res.data, {
+      const csvText = res.data;
+
+      // (Optional) Store uploaded data on backend for chatbot
+      await axios.post(`${API_URL}/upload-data`, {
+        text: csvText,
+      });
+
+      // Parse CSV returned from backend
+      Papa.parse(csvText, {
         header: true,
         skipEmptyLines: true,
         complete: (result) => {
@@ -48,8 +55,8 @@ export default function UploadCSV() {
       });
 
     } catch (err) {
-      alert("❌ CSV upload failed. Check backend.");
-      console.error(err);
+      alert("❌ CSV upload failed. Check backend connection.");
+      console.error("Upload error:", err);
     } finally {
       setLoading(false);
     }
@@ -60,6 +67,7 @@ export default function UploadCSV() {
   // =======================
   const downloadCSV = () => {
     const csv = Papa.unparse(csvData);
+
     const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8;",
     });

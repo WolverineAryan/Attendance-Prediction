@@ -4,8 +4,11 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
+from ai_chat import ai
+from chatbot import ask_ollama
 
 app = Flask(__name__)
+uploaded_csv_text = ""
 CORS(app)
 print("✅ app.py loaded")
 
@@ -57,10 +60,9 @@ def predict_manual():
         "reason": reason
     })
 
-
 # ===============================
 # ✅ CSV PREDICTION
-@app.route("/predict-csv", methods=["POST"])
+@app.route("/predict-csv", methods=["POST"])    
 def predict_csv():
     try:
         file = request.files["file"]
@@ -108,7 +110,6 @@ def predict_csv():
 
         preds = model.predict(X.values)
 
-        # ✅ FIX HERE
         def normalize_prediction(p):
             if isinstance(p, str):
                 return p.capitalize()
@@ -126,6 +127,26 @@ def predict_csv():
         print("CSV ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
+
+app.register_blueprint(ai)
+
+# ===============================
+# ✅ UPLOAD DATA FOR CHATBOT
+# ===============================
+@app.route("/upload-data", methods=["POST"])
+def upload_data():
+    global uploaded_csv_text
+    uploaded_csv_text = request.json.get("text", "")
+    return jsonify({"message": "data stored"})
+
+# ===============================
+# ✅ CHAT WITH CHATBOT
+# ===============================
+@app.route("/chat", methods=["POST"])
+def chat():
+    question = request.json.get("question")
+    answer = ask_ollama(question, uploaded_csv_text)
+    return jsonify({"reply": answer})
 
 # ===============================
 # RUN SERVER
