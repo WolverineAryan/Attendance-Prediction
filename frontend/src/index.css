@@ -6,9 +6,7 @@
 /* ===============================
    TAILWIND DIRECTIVES
 ================================ */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 
 /* ===============================
