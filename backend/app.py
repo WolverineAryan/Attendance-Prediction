@@ -6,7 +6,8 @@ import joblib
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
 from models import db, User
-from ai_chat import ask_ollama, ask_ai
+from ai_chat import ask_ollama
+from ai_chat import ask_ai
 
 app = Flask(__name__)
 CORS(app)

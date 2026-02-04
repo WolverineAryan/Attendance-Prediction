@@ -1,5 +1,5 @@
 import requests
-from langchain_community.llms import Ollama
+from langchain_community.llms import OllamaLLM
 from langchain_ollama import OllamaLLM
 ai = OllamaLLM(model="llama3")
 

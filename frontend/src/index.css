@@ -3,39 +3,58 @@
 ================================ */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+/* ===============================
+   TAILWIND DIRECTIVES
+================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* ===============================
    BASE STYLES
 ================================ */
 @layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
-    font-family: 'Poppins', sans-serif;
+    font-family: "Poppins", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 /* ===============================
    THEME CLASSES
 ================================ */
-.light {
-  background-color: #f9fafb;
-  color: #111827;
-}
+@layer components {
+  .light {
+    background-color: #f9fafb;
+    color: #111827;
+  }
 
-.dark {
-  background-color: #0f172a;
-  color: #f8fafc;
+  .dark {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
 }
 
 /* ===============================
-   ANIMATIONS
+   ANIMATIONS (Single Definitions)
 ================================ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -43,22 +62,86 @@
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.6s ease forwards;
+@keyframes slideDown {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes gradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* ===============================
-   LANDING PAGE GRADIENTS
+   COMPONENT CLASSES
 ================================ */
-
 @layer components {
+  .animate-fade {
+    animation: fadeIn 0.6s ease forwards;
+  }
+
+  .animate-slideDown {
+    animation: slideDown 1s ease;
+  }
+
+  .animate-slideRight {
+    animation: slideRight 1s ease;
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .btn-hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .btn-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+
   .gradient-bg {
     background: linear-gradient(
       135deg,
-      #A5C89E 0%,
-      #D8E983 25%,
-      #FFFBB1 50%,
-      #AEB877 100%
+      #a5c89e 0%,
+      #d8e983 25%,
+      #fffbb1 50%,
+      #aeb877 100%
     );
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
@@ -67,130 +150,24 @@
   .gradient-bg-alt {
     background: linear-gradient(
       135deg,
-      #A5C89E 0%,
-      #D8E983 50%,
-      #AEB877 100%
+      #a5c89e 0%,
+      #d8e983 50%,
+      #aeb877 100%
     );
   }
 
-  @keyframes gradient {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
+  .hero-pattern {
+    background-image: radial-gradient(#aeb877 1px, transparent 1px),
+      radial-gradient(#aeb877 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
   }
 }
+
 /* ===============================
-   BUTTON HOVER EFFECTS
+   CUSTOM SCROLLBAR
 ================================ */
-@layer components {
-  .btn-hover {
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .btn-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-  }
-}   /* Premium hero background pattern */
-.hero-pattern {
-  background-image: radial-gradient(#AEB877 1px, transparent 1px),
-    radial-gradient(#AEB877 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
-}
 
-/* Floating animation */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-/* Fade slide animation */
-@keyframes slideFade {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide {
-  animation: slideFade 1s ease forwards;
-}
-@keyframes fadeIn {
-  from { opacity: 0 }
-  to { opacity: 1 }
-}
-
-@keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0 }
-  to { transform: translateY(0); opacity: 1 }
-}
-
-@keyframes slideRight {
-  from { transform: translateX(30px); opacity: 0 }
-  to { transform: translateX(0); opacity: 1 }
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 1s ease-in-out;
-}
-
-.animate-slideDown {
-  animation: slideDown 1s ease;
-}
-
-.animate-slideRight {
-  animation: slideRight 1s ease;
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-@keyframes gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-/* Add to your global CSS file */
-@keyframes progress {
-  from { width: 0; }
-  to { width: var(--target-width); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-progress {
-  animation: progress 1s ease-out forwards;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -200,6 +177,50 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #A5C89E, #AEB877);
+  background: #a5c89e;
   border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8cb184;
+}
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: all 0.8s ease;
+}
+
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Glass background for charts section */
+.charts-glass-bg {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Glass card base style */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.glass-card-dark {
+  background: rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-login {
+  background: rgba(165, 200, 158, 0.6);
+  backdrop-filter: blur(10px);
+}
+.glass-login-dark {
+  background: rgba(10, 25, 45, 0.6);
+  backdrop-filter: blur(10px);
 }
