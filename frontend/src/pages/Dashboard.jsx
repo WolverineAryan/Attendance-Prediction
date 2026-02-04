@@ -1,11 +1,12 @@
+import React from "react";
 import { useContext } from "react";
-import { DataContext } from "../context/DataContext";
+import { DataContext } from "../context/DataContext.jsx";
 
-import Layout from "../components/Layout";
+import Layout from "../components/Layout.jsx";
 import KpiCards from "../components/KpiCards";
-import CsvCharts from "../components/CSVCharts"; 
-import { exportDashboardAsZip } from "../utils/exportDashboardZip";
-import Chatbot from "../components/ChatBot";
+import CsvCharts from "../components/CSVCharts.jsx"; 
+import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
+import Chatbot from "../components/ChatBot.jsx";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);

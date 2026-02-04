@@ -1,3 +1,4 @@
+import React from "react";  
 export default function KpiCards({ data }) {
   const total = data.length;
   const high = data.filter((d) => d.risk === "High").length;

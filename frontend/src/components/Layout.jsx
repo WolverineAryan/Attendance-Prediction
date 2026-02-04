@@ -1,5 +1,6 @@
-import Sidebar from "./Sidebar";
-import Navbar from "./Navbar";
+import React from "react";
+import Sidebar from "./Sidebar.jsx";
+import Navbar from "./Navbar.jsx";
 
 export default function Layout({ children }) {
   return (

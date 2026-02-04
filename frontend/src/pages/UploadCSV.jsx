@@ -1,10 +1,11 @@
+import React from "react";
 import { useContext, useState } from "react";
-import Layout from "../components/Layout";
-import { DataContext } from "../context/DataContext";
+import Layout from "../components/Layout.jsx";
+import { DataContext } from "../context/DataContext.jsx";
 import Papa from "papaparse";
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 console.log("API_URL =", API_URL);
 
 export default function UploadCSV() {

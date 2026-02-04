@@ -1,11 +1,13 @@
 import requests
 from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
+ai = OllamaLLM(model="llama3")
 
 # Ollama API URL
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 # Local AI model instance (optional direct use)
-ai = Ollama(model="llama3")
+ai = OllamaLLM(model="llama3")
 
 # Simple direct question function
 def ask_ai(question):

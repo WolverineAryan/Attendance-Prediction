@@ -3,12 +3,23 @@ from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import joblib
-
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_bcrypt import Bcrypt
+from models import db, User
 from ai_chat import ask_ollama, ask_ai
 
 app = Flask(__name__)
 CORS(app)
+app.config["JWT_SECRET_KEY"] = "your-secret-key-here"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///attendance.db"
 
+jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
+db.init_app(app)
+with app.app_context():
+    db.create_all() 
+
+    
 uploaded_csv_text = ""
 
 print("✅ app.py loaded")
@@ -26,6 +37,54 @@ model = joblib.load("attendance_model.pkl")
 def home():
     return "Backend running successfully"
 
+# ===============================
+# SignUP ROUTE
+# ===============================
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.get_json()
+
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({"message": "User already exists"}), 400
+
+    hashed = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    user = User(name=name, email=email, password=hashed)
+
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({"message": "Signup successful"})
+
+# ===============================
+# LOGIN ROUTE
+# ===============================
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not bcrypt.check_password_hash(user.password, password):
+        return jsonify({"message": "Invalid credentials"}), 401
+
+    token = create_access_token(identity=user.id)
+
+    return jsonify({
+        "token": token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
+        }
+    })
 
 # ===============================
 # MANUAL PREDICTION

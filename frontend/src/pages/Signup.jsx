@@ -1,39 +1,39 @@
-import React from "react";  
-import { useState, useContext } from "react";
+import React from "react";
+import { useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function Signup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/login", {
+      await axios.post("http://localhost:5000/signup", {
+        name,
         email,
         password,
       });
 
-      login(res.data);
-
-      navigate("/dashboard");
+      alert("Signup successful");
+      navigate("/login");
     } catch (err) {
-      alert("Invalid Credentials");
+      alert("Signup failed");
     }
   };
 
   return (
     <div>
-      <h2>Login</h2>
+      <h2>Signup</h2>
 
+      <input placeholder="Name" onChange={(e) => setName(e.target.value)} />
       <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
       <input placeholder="Password" type="password" onChange={(e) => setPassword(e.target.value)} />
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleSignup}>Signup</button>
     </div>
   );
 }
