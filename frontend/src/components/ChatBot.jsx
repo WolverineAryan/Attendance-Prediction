@@ -1,88 +1,88 @@
-import React from "react";
-import { useState } from "react";
-import axios from "axios";
+import React, { useContext } from "react";
+import { DataContext } from "../context/DataContext.jsx";
 
-const API_URL = import.meta.env.VITE_API_UR || "http://localhost:5000";
+import Layout from "../components/Layout.jsx";
+import KpiCards from "../components/KpiCards";
+import CsvCharts from "../components/CSVCharts.jsx";
+import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
+import Chatbot from "../components/ChatBot.jsx";
 
-export default function ChatBot() {
-  const [open, setOpen] = useState(false);
-  const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState([]);
-
-  const askQuestion = async () => {
-    if (!question) return;
-
-    const userMsg = { from: "user", text: question };
-    setMessages([...messages, userMsg]);
-
-    try {
-      const res = await axios.post(`${API_URL}/chat`, {
-        question: question,
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        { from: "bot", text: res.data.reply },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { from: "bot", text: "Error connecting to AI." },
-      ]);
-    }
-
-    setQuestion("");
-  };
+export default function Dashboard() {
+  const { csvData } = useContext(DataContext);
 
   return (
-    <>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          position: "fixed",
-          bottom: 20,
-          right: 20,
-          padding: "10px 15px",
-        }}
-      >
-        💬 AI Chat
-      </button>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 p-6 md:p-10">
 
-      {open && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 70,
-            right: 20,
-            width: 350,
-            height: 450,
-            background: "#fff",
-            borderRadius: 12,
-            padding: 10,
-            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h4>Attendance AI Bot</h4>
+        {/* HEADER SECTION */}
+        <div className="mb-8">
+          <h1 className="text-5xl font-extrabold mb-2">
+            <span className="bg-gradient-to-r from-green-800 via-green-600 to-lime-500 bg-clip-text text-transparent">
+              Analytics Dashboard
+            </span>
+          </h1>
 
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {messages.map((m, i) => (
-              <p key={i}>
-                <b>{m.from}:</b> {m.text}
-              </p>
-            ))}
+          <p className="text-green-700 text-lg">
+            Real-time insights and AI-powered attendance predictions
+          </p>
+        </div>
+
+        {/* ACTION BAR */}
+        <div className="flex flex-wrap gap-4 items-center mb-8">
+
+          <button
+            onClick={exportDashboardAsZip}
+            className="px-6 py-3 bg-gradient-to-r from-green-700 to-lime-500 text-white rounded-xl shadow-lg font-semibold hover:scale-[1.02] transition-all"
+          >
+            📦 Export Dashboard (ZIP)
+          </button>
+
+          <div className="px-4 py-2 rounded-lg bg-green-100 text-green-800 font-medium shadow-sm">
+            Records Loaded: {csvData.length}
           </div>
 
-          <input
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask something..."
-          />
-
-          <button onClick={askQuestion}>Send</button>
         </div>
-      )}
-    </>
+
+        {/* MAIN CONTENT GRID */}
+        <div className="grid gap-8">
+
+          {/* KPI SECTION */}
+          <section className="bg-white rounded-3xl shadow-xl p-6 border border-green-100">
+            <h2 className="text-2xl font-bold text-green-800 mb-4">
+              Key Performance Indicators
+            </h2>
+
+            <KpiCards data={csvData} />
+          </section>
+
+          {/* CHARTS SECTION */}
+          {csvData.length > 0 && (
+            <section className="bg-white rounded-3xl shadow-xl p-6 border border-green-100">
+              <h2 className="text-2xl font-bold text-green-800 mb-4">
+                Data Visualizations
+              </h2>
+
+              <div className="transition-all hover:scale-[1.01]">
+                <CsvCharts data={csvData} />
+              </div>
+            </section>
+          )}
+
+          {/* AI CHATBOT SECTION */}
+          <section className="bg-gradient-to-br from-green-900 via-emerald-800 to-green-700 rounded-3xl shadow-xl p-6 text-white">
+            <h2 className="text-2xl font-bold mb-4">
+              AI Assistant – Andy 🤖
+            </h2>
+
+            <p className="text-sm text-green-100 mb-4">
+              Ask questions about your uploaded attendance data
+            </p>
+
+            <Chatbot />
+          </section>
+
+        </div>
+      </div>
+    </Layout>
   );
 }

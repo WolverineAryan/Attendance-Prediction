@@ -1,53 +1,99 @@
-import React from "react";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import Layout from "../components/Layout.jsx";
 import { DataContext } from "../context/DataContext.jsx";
 import Papa from "papaparse";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-console.log("API_URL =", API_URL);
 
 export default function UploadCSV() {
-  const { csvData, setCsvData } = useContext(DataContext);
+  const { setCsvData } = useContext(DataContext);
 
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState(null);
+  const [previewData, setPreviewData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
 
   // =======================
-  // CSV UPLOAD
+  // HANDLE FILE SELECTION
   // =======================
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const processFile = (selectedFile) => {
+    setFile(selectedFile);
 
-    setFileName(file.name);
+    Papa.parse(selectedFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        setPreviewData(result.data.slice(0, 5)); // show only first 5 rows
+      },
+    });
+  };
+
+  const handleFileInput = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) processFile(selectedFile);
+  };
+
+  // =======================
+  // DRAG AND DROP
+  // =======================
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  // =======================
+  // UPLOAD TO BACKEND
+  // =======================
+  const uploadCSV = async () => {
+    if (!file) {
+      alert("Please select a CSV file first!");
+      return;
+    }
+
     setLoading(true);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Send file to backend for prediction
-      const res = await axios.post(
-        `${API_URL}/predict-csv`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          responseType: "text", // 🔥 backend returns CSV text
-        }
-      );
+      const res = await axios.post(`${API_URL}/predict-csv`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "text",
+        onUploadProgress: (event) => {
+          const percent = Math.round(
+            (event.loaded * 100) / event.total
+          );
+          setProgress(percent);
+        },
+      });
 
       const csvText = res.data;
-      
-      // (Optional) Store uploaded data on backend for chatbot
+
       await axios.post(`${API_URL}/upload-data`, {
         text: csvText,
       });
 
-      // Parse CSV returned from backend
       Papa.parse(csvText, {
         header: true,
         skipEmptyLines: true,
@@ -56,30 +102,14 @@ export default function UploadCSV() {
         },
       });
 
+      alert("CSV Uploaded and Processed Successfully!");
+
     } catch (err) {
-      alert("❌ CSV upload failed. Check backend connection.");
-      console.error("Upload error:", err);
+      alert("❌ CSV upload failed. Backend not reachable.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
-
-  // =======================
-  // DOWNLOAD CSV
-  // =======================
-  const downloadCSV = () => {
-    const csv = Papa.unparse(csvData);
-
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "attendance_prediction.csv";
-    link.click();
   };
 
   // =======================
@@ -87,87 +117,87 @@ export default function UploadCSV() {
   // =======================
   return (
     <Layout>
-      <h1 style={{ marginBottom: 25 }}>
-        CSV Attendance Prediction
-      </h1>
+      <div className="page-center">
+        <h1 className="page-title">CSV Attendance Prediction</h1>
 
-      {/* ================= UPLOAD BOX ================= */}
-      <div className="upload-box fade-in">
-        <h2>📁 Upload CSV File</h2>
+        {/* UPLOAD AREA */}
+        <div
+          className={`upload-area ${dragActive ? "drag-active" : ""}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <p>Drag & Drop CSV here</p>
+          <p>OR</p>
 
-        <p style={{ marginTop: 8, opacity: 0.8 }}>
-          Any column names supported
-        </p>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileInput}
+            hidden
+            id="fileInput"
+          />
 
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleUpload}
-          style={{ marginTop: 20 }}
-        />
+          <label htmlFor="fileInput" className="upload-btn">
+            Choose File
+          </label>
 
-        {fileName && (
-          <p style={{ marginTop: 15 }}>
-            Selected file: <b>{fileName}</b>
-          </p>
-        )}
+          {file && (
+            <p className="file-name">
+              Selected: <b>{file.name}</b>
+            </p>
+          )}
+        </div>
 
-        {loading && (
-          <p style={{ marginTop: 15 }}>
-            ⏳ Predicting attendance...
-          </p>
-        )}
-      </div>
+        {/* PREVIEW TABLE */}
+        {previewData.length > 0 && (
+          <div className="preview-card fade-in">
+            <h3>CSV Preview (First 5 Rows)</h3>
 
-      {/* ================= RESULT TABLE ================= */}
-      {csvData.length > 0 && (
-        <div className="card fade-in" style={{ marginTop: 40 }}>
-          <h3>Prediction Results</h3>
-
-          <table>
-            <thead>
-              <tr>
-                {Object.keys(csvData[0]).map((h) => (
-                  <th key={h}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {csvData.map((row, i) => (
-                <tr key={i}>
-                  {Object.entries(row).map(([key, value]) => (
-                    <td key={key}>
-                      {key.toLowerCase() === "risk" ? (
-                        <span
-                          className={`badge ${
-                            value === "High"
-                              ? "high"
-                              : value === "Medium"
-                              ? "medium"
-                              : "low"
-                          }`}
-                        >
-                          {value}
-                        </span>
-                      ) : (
-                        value
-                      )}
-                    </td>
+            <table className="preview-table">
+              <thead>
+                <tr>
+                  {Object.keys(previewData[0]).map((h) => (
+                    <th key={h}>{h}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
 
-          <button
-            onClick={downloadCSV}
-            style={{ marginTop: 25 }}
-          >
-            ⬇ Download Prediction CSV
-          </button>
-        </div>
-      )}
+              <tbody>
+                {previewData.map((row, i) => (
+                  <tr key={i}>
+                    {Object.values(row).map((val, j) => (
+                      <td key={j}>{val}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <button
+              className="primary-btn"
+              onClick={uploadCSV}
+              disabled={loading}
+            >
+              {loading ? "Uploading..." : "Upload & Predict"}
+            </button>
+          </div>
+        )}
+
+        {/* PROGRESS BAR */}
+        {loading && (
+          <div className="progress-box">
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p>{progress}% completed</p>
+          </div>
+        )}
+      </div>
     </Layout>
   );
 }

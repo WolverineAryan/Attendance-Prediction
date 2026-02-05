@@ -7,7 +7,7 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import { useEffect } from "react";
 import ParticlesBackground from "../components/ParticlesBackground";
 import useParallax from "../hooks/useParallax";
-
+  
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

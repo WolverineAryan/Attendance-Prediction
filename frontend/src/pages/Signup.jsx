@@ -19,7 +19,7 @@ export default function Signup() {
       return;
     }
 
-    signup({ name, email });
+    signup({ name, email, password });
     navigate("/dashboard");
   };
 

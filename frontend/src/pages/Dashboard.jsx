@@ -1,46 +1,71 @@
-import React from "react";
-import { useContext } from "react";
-import { DataContext } from "../context/DataContext.jsx";
-
+import React, { useContext, useState } from "react";
 import Layout from "../components/Layout.jsx";
-import KpiCards from "../components/KpiCards";
-import CsvCharts from "../components/CSVCharts.jsx"; 
-import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
-import Chatbot from "../components/ChatBot.jsx";
+import KpiCards from "../components/KpiCards.jsx";
+import { DataContext } from "../context/DataContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
+import CSVCharts from "../components/CSVCharts.jsx";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
 
+  const [page, setPage] = useState(1);
+  const pageSize = 100;
+
+  const totalPages = Math.ceil(csvData.length / pageSize);
+
+  const safeData = Array.isArray(csvData)
+    ? csvData.slice((page - 1) * pageSize, page * pageSize)
+    : [];
+
+  const nextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
+
+  const prevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  // Prepare minimal chart data
+  const chartData = safeData.map((row, i) => ({
+    name: row.student_id || `S${i + 1}`,
+    attendance: Number(row.attendance || 0),
+  }));
+
   return (
     <Layout>
-      <h1 style={{ marginBottom: 25 }}>Dashboard</h1>
+      <div style={{ padding: 20 }}>
 
-      {/* ✅ KPI CARDS (ONLY ONCE) */}
-      <KpiCards data={csvData} />
+        <h1 style={{ marginBottom: 20 }}>Dashboard</h1>
 
-      
-<button
-  onClick={exportDashboardAsZip}
-  style={{
-    padding: "12px 20px",
-    background: "#16a34a",
-    color: "white",
-    border: "none",
-    borderRadius: 8,
-    cursor: "pointer",
-    marginBottom: 25,
-    fontWeight: 600,
-  }}
->
-  📦 Export Dashboard Images (ZIP)
-</button>
+        {/* KPI CARDS */}
+        <KpiCards data={safeData} />
+<CSVCharts data={safeData} />
 
-      {/* ✅ CHARTS (ONLY ONCE) */}
-      {csvData.length > 0 && (
-        <CsvCharts data={csvData} />
-      )}
-      <Chatbot />
+        {/* PAGINATION */}
+        {csvData.length > pageSize && (
+          <div
+            style={{
+              marginTop: 25,
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            <button onClick={prevPage} disabled={page === 1}>
+              Previous
+            </button>
+
+            <span>
+              Page {page} of {totalPages}
+            </span>
+
+            <button onClick={nextPage} disabled={page === totalPages}>
+              Next
+            </button>
+          </div>
+        )}
+
+      </div>
     </Layout>
   );
-  
 }

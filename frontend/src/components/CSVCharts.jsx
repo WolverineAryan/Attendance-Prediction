@@ -50,17 +50,29 @@ const normalizeRisk = (value) => {
 
 /* ================================================= */
 
-export default function CsvCharts({ data }) {
+export default React.memo(function CsvCharts({ data }) {
   if (!Array.isArray(data) || data.length === 0) return null;
 
-  const isDark = document.body.classList.contains("dark");
+  // -------- PERFORMANCE LIMIT --------
+  const MAX_ROWS = 200;
+
+  const safeData =
+    data.length > MAX_ROWS
+      ? data.slice(0, MAX_ROWS)
+      : data;
+
+  const isDark = React.useMemo(
+    () => document.body.classList.contains("dark"),
+    []
+  );
 
   const axisColor = isDark ? "#e5e7eb" : "#374151";
   const gridColor = isDark ? "#334155" : "#e5e7eb";
   const tooltipBg = isDark ? "#020617" : "#ffffff";
   const tooltipText = isDark ? "#ffffff" : "#111827";
 
-  const chartData = data.map((row, i) => ({
+  // -------- MAIN DATA TRANSFORM --------
+  const chartData = safeData.map((row, i) => ({
     name:
       row.student_id ||
       row.Student_ID ||
@@ -109,94 +121,94 @@ export default function CsvCharts({ data }) {
     >
       {/* ================= ATTENDANCE ================= */}
       <div id="attendance-chart">
-      <ChartCard dark={isDark} title="Attendance Percentage">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fill: axisColor }} />
-            <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend />
+        <ChartCard dark={isDark} title="Attendance Percentage">
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fill: axisColor }} />
+              <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend />
 
-            <Bar
-              dataKey="attendance"
-              fill="#6366f1"
-              radius={[8, 8, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+              <Bar
+                dataKey="attendance"
+                fill="#6366f1"
+                radius={[8, 8, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
       {/* ================= PIE ================= */}
-      <div id='risk-pie-chart'>
-      <ChartCard dark={isDark} title="Risk Distribution">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={pieData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={60}
-              outerRadius={110}
-              paddingAngle={4}
-            >
-              {pieData.map((e, i) => (
-                <Cell key={i} fill={COLORS[e.name]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </ChartCard>
-    </div>
+      <div id="risk-pie-chart">
+        <ChartCard dark={isDark} title="Risk Distribution">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={60}
+                outerRadius={110}
+                paddingAngle={4}
+              >
+                {pieData.map((e, i) => (
+                  <Cell key={i} fill={COLORS[e.name]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
       {/* ================= LINE ================= */}
-    <div id='late-leaves-chart'>
-      <ChartCard dark={isDark} title="Late vs Leaves">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fill: axisColor }} />
-            <YAxis tick={{ fill: axisColor }} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Legend />
-            <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
-            <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartCard>
-    </div>
+      <div id="late-leaves-chart">
+        <ChartCard dark={isDark} title="Late vs Leaves">
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fill: axisColor }} />
+              <YAxis tick={{ fill: axisColor }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend />
+              <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
+              <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
       {/* ================= AREA ================= */}
-    <div id='discipline-chart'>
-      <ChartCard dark={isDark} title="Discipline Score">
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-            <XAxis dataKey="name" tick={{ fill: axisColor }} />
-            <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Area
-              type="monotone"
-              dataKey="discipline"
-              stroke="#22c55e"
-              fill="url(#disc)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </ChartCard>
-    </div>
+      <div id="discipline-chart">
+        <ChartCard dark={isDark} title="Discipline Score">
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fill: axisColor }} />
+              <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Area
+                type="monotone"
+                dataKey="discipline"
+                stroke="#22c55e"
+                fill="url(#disc)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
     </div>
   );
-}
+});
 
 /* ================= CARD ================= */
 

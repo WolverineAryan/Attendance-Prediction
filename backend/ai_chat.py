@@ -1,19 +1,7 @@
 import requests
-from langchain_community.llms import OllamaLLM
-from langchain_ollama import OllamaLLM
-ai = OllamaLLM(model="llama3")
 
-# Ollama API URL
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Local AI model instance (optional direct use)
-ai = OllamaLLM(model="llama3")
-
-# Simple direct question function
-def ask_ai(question):
-    return ai(question)
-
-# Main function used by chatbot
 def ask_ollama(prompt, csv_text):
     try:
         full_prompt = f"""
@@ -54,4 +42,3 @@ Answer:
     except Exception as e:
         print("CHATBOT EXCEPTION:", e)
         return "No response (Ollama not reachable)"
-

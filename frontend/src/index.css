@@ -500,3 +500,73 @@
   border-color: #22c55e;
   box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
 }
+.upload-area {
+  border: 2px dashed #16a34a;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+  transition: 0.3s;
+  background: #f0fdf4;
+}
+
+.drag-active {
+  background: #dcfce7;
+  border-color: #065f46;
+}
+
+.upload-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 16px;
+  background: #16a34a;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.preview-card {
+  margin-top: 25px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.preview-table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.progress-box {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  background: #e5e7eb;
+  height: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #16a34a;
+  transition: 0.3s;
+}
+
+.primary-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #16a34a;
+  color: white;
+  border-radius: 8px;
+  border: none;
+}
