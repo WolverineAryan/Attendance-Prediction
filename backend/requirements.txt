@@ -1,6 +1,21 @@
-flask
-flask-cors
-pandas
-scikit-learn
-joblib
-requests
+# Core Backend
+flask==3.0.2
+flask-cors==4.0.0
+python-dotenv==1.0.1
+
+# AI / LangChain
+langchain==0.1.16
+langchain-community==0.0.36
+ollama==0.1.8
+
+# ML / Data Processing
+numpy==1.26.4
+pandas==2.2.1
+scikit-learn==1.4.2
+
+# Transformers (if used for NLP)
+transformers==4.38.2
+
+# Validation / Utilities
+pydantic==2.6.4
+requests==2.31.0
