@@ -1,64 +1,168 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Mail, Lock, User } from "lucide-react";
+import Particles from "../components/Particles";
 
 export default function Signup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
+  const { signup } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSignup = async () => {
-    try {
-      await axios.post("http://localhost:5000/signup", {
-        email,
-        password,
-      });
-
-      alert("Account Created!");
-      navigate("/login");
-    } catch {
-      alert("Signup Failed");
+  const handleSignup = () => {
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
     }
+
+    signup({ name, email });
+    navigate("/dashboard");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-10 rounded-3xl shadow-2xl w-[420px]">
+    <div
+      className="min-h-screen flex items-center justify-center relative bg-[#f3f4f6] overflow-hidden"
+      onMouseMove={(e) => {
+        const x = (e.clientX / window.innerWidth) * 30;
+        const y = (e.clientY / window.innerHeight) * 30;
+        document.documentElement.style.setProperty("--mx", `${x}px`);
+        document.documentElement.style.setProperty("--my", `${y}px`);
+      }}
+    >
+      {/* FULL SCREEN INTERACTIVE PARTICLES */}
+      <Particles />
 
-        <h2 className="text-3xl font-bold text-center mb-6">
-          Create Account
-        </h2>
+      {/* PARALLAX ABSTRACT BACKGROUND */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div
+          className="absolute top-[-150px] left-[-150px] w-[600px] h-[600px] bg-green-300 opacity-30 rounded-full blur-3xl transition-all duration-300"
+          style={{
+            transform: "translate(var(--mx), var(--my))",
+          }}
+        ></div>
 
-        <input
-          className="w-full p-3 border rounded-xl mb-4"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div
+          className="absolute bottom-[-150px] right-[-100px] w-[500px] h-[500px] bg-lime-300 opacity-30 rounded-full blur-3xl transition-all duration-300"
+          style={{
+            transform: "translate(calc(var(--mx) * -1), calc(var(--my) * -1))",
+          }}
+        ></div>
 
-        <input
-          type="password"
-          className="w-full p-3 border rounded-xl mb-6"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div
+          className="absolute top-[20%] right-[10%] w-[300px] h-[300px] bg-emerald-200 opacity-20 rounded-full blur-2xl transition-all duration-300"
+          style={{
+            transform: "translate(calc(var(--mx) * 0.5), calc(var(--my) * 0.5))",
+          }}
+        ></div>
+      </div>
 
-        <button
-          onClick={handleSignup}
-          className="w-full py-3 bg-apsGreen text-white rounded-xl font-bold hover:scale-105 transition"
-        >
-          Sign Up
-        </button>
+      <div className="relative z-10 grid lg:grid-cols-2 gap-16 items-center max-w-6xl w-full px-8">
 
-        <p className="text-center mt-4">
-          Already have an account?{" "}
-          <span
-            onClick={() => navigate("/login")}
-            className="text-apsOlive cursor-pointer font-semibold"
-          >
-            Login
-          </span>
-        </p>
+        {/* ===== SIGNUP CARD (EXACT LOGIN STYLE) ===== */}
+        <div className="group bg-gradient-to-br from-green-900 via-emerald-800 to-green-700 p-10 rounded-3xl shadow-2xl text-white backdrop-blur-lg transition duration-300 hover:scale-[1.02] relative overflow-hidden">
+          
+          {/* Glow Hover Effect */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-40 transition duration-300 bg-gradient-to-r from-lime-400 to-emerald-500 blur-3xl"></div>
+
+          <div className="relative z-10">
+            <h2 className="text-4xl font-bold text-center mb-8 tracking-wider">
+              SIGN UP
+            </h2>
+
+            <div className="space-y-6">
+
+              {/* Name */}
+              <div className="flex items-center bg-white/20 rounded-xl px-4 py-3 transition hover:bg-white/30">
+                <User className="text-white mr-3" />
+                <input
+                  className="bg-transparent outline-none w-full placeholder:text-gray-200"
+                  placeholder="Full Name"
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center bg-white/20 rounded-xl px-4 py-3 transition hover:bg-white/30">
+                <Mail className="text-white mr-3" />
+                <input
+                  className="bg-transparent outline-none w-full placeholder:text-gray-200"
+                  placeholder="Email"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              {/* Password */}
+              <div className="flex items-center bg-white/20 rounded-xl px-4 py-3 transition hover:bg-white/30">
+                <Lock className="text-white mr-3" />
+                <input
+                  type="password"
+                  className="bg-transparent outline-none w-full placeholder:text-gray-200"
+                  placeholder="Password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {/* Confirm Password */}
+              <div className="flex items-center bg-white/20 rounded-xl px-4 py-3 transition hover:bg-white/30">
+                <Lock className="text-white mr-3" />
+                <input
+                  type="password"
+                  className="bg-transparent outline-none w-full placeholder:text-gray-200"
+                  placeholder="Confirm Password"
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+
+              {/* Signup Button */}
+              <button
+                onClick={handleSignup}
+                className="w-full py-3 rounded-xl font-bold bg-lime-300 text-green-900 hover:bg-lime-400 transition shadow-lg hover:shadow-2xl"
+              >
+                Create Account
+              </button>
+
+              <div className="border-t border-white/30 my-4"></div>
+
+              {/* Google Signup */}
+              <button className="w-full py-3 rounded-xl font-bold bg-white text-green-900 hover:bg-gray-100 transition shadow-lg">
+                Sign up with Google
+              </button>
+
+              <p className="text-center text-sm mt-4">
+                Already have an account?{" "}
+                <span
+                  onClick={() => navigate("/login")}
+                  className="font-bold cursor-pointer hover:underline text-lime-300"
+                >
+                  Login
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE TEXT – SAME AS LOGIN */}
+        <div className="space-y-6 animate-fade text-right">
+          <p className="tracking-widest text-3xl text-green-900">
+            WELCOME TO
+          </p>
+
+          <h1 className="text-6xl font-extrabold leading-tight">
+            <span className="bg-gradient-to-r from-green-900 via-green-600 to-lime-500 bg-clip-text text-transparent">
+              AI Attendance <br />
+              Prediction System
+            </span>
+          </h1>
+
+          <p className="text-green-800 text-lg">
+            Create your account to start smart attendance analysis
+          </p>
+        </div>
+
       </div>
     </div>
   );

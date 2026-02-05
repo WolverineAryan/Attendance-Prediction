@@ -24,7 +24,7 @@ function StatCard({ title, value }) {
 
   return (
     <div className="transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(165,200,158,0.6)]">
-      <div className="p-[2px] rounded-2xl bg-gradient-to-r from-apsGreen via-apsLime to-apsOlive">
+      <div className="p-0.5 rounded-2xl bg-linear-to-r from-apsGreen via-apsLime to-apsOlive">
         <div className="glass-card p-6 rounded-2xl text-center">
           <h3 className="text-4xl font-bold text-gray-900">{count}+</h3>
           <p className="mt-2 font-semibold text-gray-800">{title}</p>
@@ -57,25 +57,24 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
-
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-apsGreen to-apsLime overflow-x-hidden">
       {/* HEADER */}
-      <header className="flex justify-between items-center px-10 py-6 animate-fadeIn shadow-sm">
-        <h1 className="text-3xl font-extrabold text-gray-900">
+      <header className="flex justify-between items-center px-10 py-6 animate-fadeIn shadow-sm bg-emerald-900/80">
+        <h1 className="text-3xl font-extrabold text-white-900">
           APS PLATFORM
         </h1>
 
         <div className="space-x-4">
           <button
             onClick={() => navigate("/login")}
-            className="px-6 py-2 bg-apsLime rounded-full font-semibold hover:shadow-lg transition"
+            className="px-6 py-2  bg-emerald-400 text-white rounded-full font-semibold hover:shadow-lg transition"
           >
             Login
           </button>
 
           <button
             onClick={() => navigate("/signup")}
-            className="px-6 py-2 bg-apsGreen text-white rounded-full font-semibold hover:shadow-lg transition"
+            className="px-6 py-2 bg-emerald-400 text-white rounded-full font-semibold hover:shadow-lg transition"
           >
             Sign Up
           </button>
