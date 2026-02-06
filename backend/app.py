@@ -23,7 +23,7 @@ app = Flask(__name__)
 # ----- CONFIGURATION -----
 CORS(app, supports_credentials=True)
 
-app.config["JWT_SECRET_KEY"] = "your-secret-key-here"
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_secret_key_please_change")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///attendance.db"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 15 * 60       # 15 minutes
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 7 * 24 * 60 * 60   # 7 days
