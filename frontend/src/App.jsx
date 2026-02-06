@@ -19,7 +19,6 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/manual" element={<ProtectedRoute><ManualPredict /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadCSV /></ProtectedRoute>} />
-
       </Routes>
     </BrowserRouter>
   );

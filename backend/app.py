@@ -3,6 +3,8 @@ from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import joblib
+import os
+
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -11,23 +13,23 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
-
 from models import db, User
 from ai_chat import ask_ollama
 
 app = Flask(__name__)
 
-# ----- CONFIGURATION -----
-CORS(app, supports_credentials=True)
+# ================= CONFIG =================
+CORS(app)
 
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev_secret_key_please_change")
+app.config["JWT_SECRET_KEY"] = os.getenv(
+    "JWT_SECRET_KEY",
+    "attendance_ai_super_secure_random_key_2026_long_enough"
+)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///attendance.db"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 15 * 60       # 15 minutes
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 7 * 24 * 60 * 60   # 7 days
-
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 15 * 60
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 7 * 24 * 60 * 60
 
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
@@ -41,37 +43,30 @@ uploaded_csv_text = ""
 
 print("✅ app.py loaded")
 
-# ===============================
-# Load trained ML model
-# ===============================
+# ================= LOAD ML MODEL =================
 model = joblib.load("attendance_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
-
-# ===============================
-# HOME TEST ROUTE
-# ===============================
+# ================= TEST ROUTE =================
 @app.route("/")
 def home():
     return "Backend running successfully"
 
-
-# ===============================
-# SIGNUP ROUTE
-# ===============================
+# ================= SIGNUP =================
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
 
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-
-    if User.query.filter_by(email=email).first():
+    if User.query.filter_by(email=data.get("email")).first():
         return jsonify({"message": "User already exists"}), 400
 
-    hashed = bcrypt.generate_password_hash(password).decode("utf-8")
+    hashed = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
 
-    user = User(name=name, email=email, password=hashed)
+    user = User(
+        name=data["name"],
+        email=data["email"],
+        password=hashed
+    )
 
     db.session.add(user)
     db.session.commit()
@@ -79,19 +74,14 @@ def signup():
     return jsonify({"message": "Signup successful"})
 
 
-# ===============================
-# LOGIN ROUTE
-# ===============================
+# ================= LOGIN =================
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
 
-    email = data.get("email")
-    password = data.get("password")
+    user = User.query.filter_by(email=data.get("email")).first()
 
-    user = User.query.filter_by(email=email).first()
-
-    if not user or not bcrypt.check_password_hash(user.password, password):
+    if not user or not bcrypt.check_password_hash(user.password, data.get("password")):
         return jsonify({"message": "Invalid credentials"}), 401
 
     access_token = create_access_token(identity=user.id)
@@ -106,64 +96,50 @@ def login():
             "email": user.email
         }
     })
+
+
+# ================= TOKEN REFRESH =================
 @app.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     user_id = get_jwt_identity()
-
     new_access_token = create_access_token(identity=user_id)
 
     return jsonify({
         "access_token": new_access_token
     })
 
-# ===============================
-# MANUAL PREDICTION (PROTECTED)
-# ===============================
+
+# ================= MANUAL PREDICTION =================
 @app.route("/predict-manual", methods=["POST"])
-@jwt_required()
 def predict_manual():
     data = request.get_json()
 
-    attendance = data["attendance"]
-    late = data["late"]
-    leaves = data["leaves"]
-    discipline = data["discipline"]
+    X = np.array([[data["attendance"], data["late"], data["leaves"]]])
+    X_scaled = scaler.transform(X)
 
-    X = np.array([[attendance, late, leaves, discipline]])
+    prediction = model.predict(X_scaled)[0]
 
-    model.predict(X)
-
-    if attendance < 50 or leaves > 8 or late > 12:
-        risk = "High"
-        reason = "Very low attendance or excessive leaves/late"
-
-    elif attendance < 70 or late > 6:
-        risk = "Medium"
-        reason = "Irregular attendance pattern"
-    else:
-        risk = "Low"
-        reason = "Good attendance record"
+    risk_map = {
+        0: "Low Risk",
+        1: "Medium Risk",
+        2: "High Risk"
+    }
 
     return jsonify({
-        "risk": risk,
-        "reason": reason
+        "risk": risk_map.get(int(prediction), "Unknown"),
+        "reason": "Prediction generated by ML model"
     })
 
 
-# ===============================
-# CSV PREDICTION (PROTECTED)
-# ===============================
+# ================= CSV PREDICTION =================
 @app.route("/predict-csv", methods=["POST"])
-@jwt_required()
 def predict_csv():
     try:
         file = request.files["file"]
         df = pd.read_csv(file)
 
-        if "risk" in df.columns:
-            df = df.drop(columns=["risk"])
-
+        # Normalize column names
         df.columns = (
             df.columns.str.lower()
             .str.replace(" ", "")
@@ -171,6 +147,7 @@ def predict_csv():
             .str.replace("%", "")
         )
 
+        # -------- SMART COLUMN FINDER --------
         def find_col(keys):
             for col in df.columns:
                 for k in keys:
@@ -178,14 +155,21 @@ def predict_csv():
                         return col
             return None
 
-        attendance_col = find_col(["attendance", "attend", "present"])
-        late_col = find_col(["late"])
-        leaves_col = find_col(["leave", "absent"])
-        discipline_col = find_col(["discipline", "behavior", "behaviour"])
+        attendance_col = find_col([
+            "attendance", "attend", "present", "dayspresent"
+        ])
 
-        if not all([attendance_col, late_col, leaves_col, discipline_col]):
+        late_col = find_col([
+            "late", "latedays"
+        ])
+
+        leaves_col = find_col([
+            "leave", "leaves", "absent", "leavestaken"
+        ])
+
+        if not all([attendance_col, late_col, leaves_col]):
             return jsonify({
-                "error": "CSV must include attendance, late, leaves, discipline columns"
+                "error": "CSV must include attendance, late days and leaves columns"
             }), 400
 
         def clean(col):
@@ -197,22 +181,29 @@ def predict_csv():
                 .astype(float)
             )
 
+        # ---- STANDARDIZE TO MODEL FEATURES ----
         X = pd.DataFrame({
-            "attendance": clean(df[attendance_col]),
-            "late": clean(df[late_col]),
-            "leaves": clean(df[leaves_col]),
-            "discipline": clean(df[discipline_col]),
+            "dayspresent": clean(df[attendance_col]),
+            "latedays": clean(df[late_col]),
+            "leavestaken": clean(df[leaves_col])
         })
 
-        preds = model.predict(X.values)
+        print("Detected Columns:", attendance_col, late_col, leaves_col)
+        print("Feature Shape:", X.shape)
+
+        X_scaled = scaler.transform(X)
+
+        preds = model.predict(X_scaled)
 
         def normalize_prediction(p):
-            if isinstance(p, str):
-                return p.capitalize()
-            risk_map = {0: "Low", 1: "Medium", 2: "High"}
+            risk_map = {
+                0: "Low Risk",
+                1: "Medium Risk",
+                2: "High Risk"
+            }
             return risk_map.get(int(p), "Unknown")
 
-        df["risk"] = [normalize_prediction(p) for p in preds]
+        df["Predicted_Risk"] = [normalize_prediction(p) for p in preds]
 
         output = "attendance_prediction.csv"
         df.to_csv(output, index=False)
@@ -224,11 +215,8 @@ def predict_csv():
         return jsonify({"error": str(e)}), 500
 
 
-# ===============================
-# STORE CSV DATA FOR AI (PROTECTED)
-# ===============================
+# ================= STORE CSV FOR CHATBOT =================
 @app.route("/upload-data", methods=["POST"])
-@jwt_required()
 def upload_data():
     global uploaded_csv_text
 
@@ -237,15 +225,10 @@ def upload_data():
     return jsonify({"message": "CSV data stored for AI chatbot"})
 
 
-# ===============================
-# CHATBOT ROUTE (PROTECTED)
-# ===============================
+# ================= CHATBOT =================
 @app.route("/chat", methods=["POST"])
-@jwt_required()
 def chat():
     try:
-        user_id = get_jwt_identity()
-
         data = request.json or {}
         question = data.get("message", "")
 
@@ -255,8 +238,7 @@ def chat():
         answer = ask_ollama(question, uploaded_csv_text)
 
         return jsonify({
-            "reply": answer,
-            "user_id": user_id
+            "reply": answer
         })
 
     except Exception as e:
@@ -264,17 +246,13 @@ def chat():
         return jsonify({"reply": str(e)}), 500
 
 
-# ===============================
-# LOGOUT ROUTE (OPTIONAL)
-# ===============================
+# ================= LOGOUT =================
 @app.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
     return jsonify({"message": "Logged out successfully"})
 
 
-# ===============================
-# RUN SERVER
-# ===============================
+# ================= RUN SERVER =================
 if __name__ == "__main__":
     app.run(port=5000)

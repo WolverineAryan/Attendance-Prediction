@@ -3,20 +3,20 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout.jsx";
 import KpiCards from "../components/KpiCards.jsx";
 import { DataContext } from "../context/DataContext.jsx";
-import { AuthContext } from "../context/AuthContext.jsx";
 import CSVCharts from "../components/CSVCharts.jsx";
-import Chatbot from "../components/ChatBot.jsx";
 import ChatPopup from "../components/ChatPopup.jsx";
 import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
   const navigate = useNavigate();
+
   const [page, setPage] = useState(1);
   const pageSize = 100;
 
   const totalPages = Math.ceil(csvData.length / pageSize);
 
+  // PAGINATED DATA ONLY FOR TABLES
   const safeData = Array.isArray(csvData)
     ? csvData.slice((page - 1) * pageSize, page * pageSize)
     : [];
@@ -29,30 +29,29 @@ export default function Dashboard() {
     if (page > 1) setPage(page - 1);
   };
 
-  // Prepare minimal chart data
-  const chartData = safeData.map((row, i) => ({
-    name: row.student_id || `S${i + 1}`,
-    attendance: Number(row.attendance || 0),
-  }));
-
   return (
     <Layout>
       <div style={{ padding: 20 }}>
 
         <h1 style={{ marginBottom: 20 }}>Dashboard</h1>
 
-        {/* KPI CARDS */}
-        <KpiCards data={safeData} />
-<CSVCharts data={safeData} />
+        {/* 
+          🔥 KPI CARDS MUST USE FULL DATASET
+          NOT PAGINATED DATA 
+        */}
+        <KpiCards data={csvData} />
 
-<button
-  onClick={exportDashboardAsZip}
-  className=" px-6 py-3 mb-6 rounded-xl font-bold bg-green-700 text-white hover:bg-green-800 transition"
->
-  📄 Export Charts as PDF
-</button>
+        {/* CHARTS ALSO SHOULD USE FULL DATA */}
+        <CSVCharts data={csvData} />
 
-        {/* PAGINATION */}
+        <button
+          onClick={exportDashboardAsZip}
+          className="px-6 py-3 mb-6 rounded-xl font-bold bg-green-700 text-white hover:bg-green-800 transition"
+        >
+          📄 Export Charts as PDF
+        </button>
+
+        {/* PAGINATION ONLY FOR TABULAR DISPLAY */}
         {csvData.length > pageSize && (
           <div
             style={{
@@ -62,7 +61,7 @@ export default function Dashboard() {
               alignItems: "center",
             }}
           >
-            <button onClick={prevPage} disabled={page === 1}> 
+            <button onClick={prevPage} disabled={page === 1}>
               Previous
             </button>
 
@@ -75,25 +74,28 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-<button
-  onClick={() => navigate("/chatpopup")}
-  style={{
-    position: "fixed",
-    bottom: 25,
-    right: 25,
-    padding: 14,
-    borderRadius: "50%",
-    background: "#111827",
-    color: "white",
-    border: "none",
-    cursor: "pointer",
-    fontSize: 20,
-    boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
-  }}
->
-  💬
-</button>
-<ChatPopup />
+
+        {/* CHATBOT POPUP */}
+        <button
+          onClick={() => navigate("/chatpopup")}
+          style={{
+            position: "fixed",
+            bottom: 25,
+            right: 25,
+            padding: 14,
+            borderRadius: "50%",
+            background: "#111827",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 20,
+            boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+          }}
+        >
+          💬
+        </button>
+
+        <ChatPopup />
 
       </div>
     </Layout>

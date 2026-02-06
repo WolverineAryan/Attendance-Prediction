@@ -4,138 +4,117 @@ import ChatBot from "./ChatBot.jsx";
 export default function ChatPopup() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
-  const [unread, setUnread] = useState(0);
 
-  // Dragging state
   const popupRef = useRef(null);
-  const [position, setPosition] = useState({ x: 25, y: 25 });
-  const [dragging, setDragging] = useState(false);
 
-  // Load previous chat state
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const [size, setSize] = useState({ width: 380, height: 520 });
+
+  const drag = useRef({ active: false, offsetX: 0, offsetY: 0 });
+
+  // Load saved state
   useEffect(() => {
-    const saved = localStorage.getItem("andy_open");
+    const saved = localStorage.getItem("chat_open");
     if (saved === "true") setOpen(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("andy_open", open);
+    localStorage.setItem("chat_open", open);
   }, [open]);
 
-  const onDragStart = (e) => {
-    setDragging(true);
+  // ===== DRAGGING =====
+  const startDrag = (e) => {
+    drag.current = {
+      active: true,
+      offsetX: e.clientX - position.x,
+      offsetY: e.clientY - position.y,
+    };
   };
 
-  const onDrag = (e) => {
-    if (!dragging) return;
+  const onMouseMove = (e) => {
+    if (!drag.current.active) return;
 
     setPosition({
-      x: window.innerWidth - e.clientX,
-      y: window.innerHeight - e.clientY,
+      x: e.clientX - drag.current.offsetX,
+      y: e.clientY - drag.current.offsetY,
     });
   };
 
-  const onDragEnd = () => setDragging(false);
+  const stopDrag = () => {
+    drag.current.active = false;
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", stopDrag);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", stopDrag);
+    };
+  }, [position]);
 
   return (
     <>
-      {/* Floating Button */}
-      {!open && (
-        <button
-          onClick={() => {
-            setOpen(true);
-            setUnread(0);
-          }}
-          style={{
-            position: "fixed",
-            bottom: 25,
-            right: 25,
-            padding: 14,
-            borderRadius: "50%",
-            background: "#111827",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 18,
-            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-          }}
-        >
-          🤖
-          {unread > 0 && (
-            <span
-              style={{
-                position: "absolute",
-                top: -5,
-                right: -5,
-                background: "red",
-                color: "white",
-                borderRadius: "50%",
-                padding: "3px 7px",
-                fontSize: 12,
-              }}
-            >
-              {unread}
-            </span>
-          )}
-        </button>
-      )}
+ 
 
-      {/* Chat Window */}
+      {/* CHAT WINDOW */}
       {open && (
         <div
           ref={popupRef}
-          onMouseMove={onDrag}
-          onMouseUp={onDragEnd}
           style={{
             position: "fixed",
-            bottom: position.y,
-            right: position.x,
-            width: 380,
-            background: "rgba(255,255,255,0.9)",
-            backdropFilter: "blur(12px)",
-            borderRadius: 16,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.2)",
-            border: "1px solid rgba(0,0,0,0.1)",
+            left: position.x,
+            top: position.y,
+            width: size.width,
+            height: minimized ? 50 : size.height,
+            background: "#ffffff",
+            borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            border: "1px solid #e5e7eb",
+            display: "flex",
+            flexDirection: "column",
             zIndex: 999,
+            resize: "both",
+            overflow: "hidden",
           }}
         >
-          {/* Header */}
+          {/* HEADER */}
           <div
-            onMouseDown={onDragStart}
+            onMouseDown={startDrag}
             style={{
+              padding: "10px 14px",
+              background: "#065f46",
+              color: "white",
+              cursor: "move",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              padding: "10px 15px",
-              borderBottom: "1px solid #ddd",
-              cursor: "move",
             }}
           >
-            <h4 style={{ margin: 0 }}>ANDY – AI Assistant</h4>
+            <span className="font-semibold">ANDY – Assistant</span>
 
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={() => setMinimized(!minimized)}
-                style={{ border: "none", background: "none", cursor: "pointer" }}
+                style={{ background: "none", border: "none", color: "white" }}
               >
-                {minimized ? "🔼" : "🔽"}
+                {minimized ? "▲" : "▼"}
               </button>
 
               <button
-                onClick={() => {
-                  setOpen(false);
-                  setMinimized(false);
-                }}
-                style={{ border: "none", background: "none", cursor: "pointer" }}
+                onClick={() => setOpen(false)}
+                style={{ background: "none", border: "none", color: "white" }}
               >
                 ✖
               </button>
             </div>
           </div>
 
-          {/* Chat Body */}
+          {/* BODY */}
           {!minimized && (
-            <div style={{ padding: 10 }}>
-              <ChatBot onNewMessage={() => !open && setUnread(u => u + 1)} />
+            <div style={{ flex: 1, overflow: "auto", padding: 8 }}>
+              <ChatBot />
             </div>
           )}
         </div>

@@ -2,9 +2,7 @@ import React, { useContext, useState } from "react";
 import Layout from "../components/Layout.jsx";
 import { DataContext } from "../context/DataContext.jsx";
 import Papa from "papaparse";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import api from "../utils/axiosConfig";
 
 export default function UploadCSV() {
   const { setCsvData } = useContext(DataContext);
@@ -25,7 +23,7 @@ export default function UploadCSV() {
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        setPreviewData(result.data.slice(0, 5)); // show only first 5 rows
+        setPreviewData(result.data.slice(0, 5));
       },
     });
   };
@@ -75,22 +73,21 @@ export default function UploadCSV() {
     formData.append("file", file);
 
     try {
-      const res = await axios.post(`${API_URL}/predict-csv`, formData, {
+      const res = await api.post("/predict-csv", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         responseType: "text",
         onUploadProgress: (event) => {
-          const percent = Math.round(
-            (event.loaded * 100) / event.total
-          );
+          const percent = Math.round((event.loaded * 100) / event.total);
           setProgress(percent);
         },
       });
 
       const csvText = res.data;
 
-      await axios.post(`${API_URL}/upload-data`, {
+      // Store processed CSV for chatbot
+      await api.post("/upload-data", {
         text: csvText,
       });
 
@@ -105,8 +102,26 @@ export default function UploadCSV() {
       alert("CSV Uploaded and Processed Successfully!");
 
     } catch (err) {
-      alert("❌ CSV upload failed. Backend not reachable.");
-      console.error(err);
+      console.error("UPLOAD ERROR:", err);
+
+      // BETTER ERROR HANDLING
+      if (err.response) {
+        const status = err.response.status;
+        const serverMsg = err.response.data?.error || err.response.data?.message;
+
+        if (status === 401) {
+          alert("Session expired. Please login again.");
+        } else if (status === 422) {
+          alert(`Invalid request: ${serverMsg || "Authentication issue (JWT token missing)"}`);
+        } else if (status === 400) {
+          alert(`CSV Error: ${serverMsg}`);
+        } else {
+          alert(`Upload failed: ${serverMsg || "Unknown server error"}`);
+        }
+      } else {
+        alert("Network error: Could not reach backend.");
+      }
+
     } finally {
       setLoading(false);
     }
@@ -120,7 +135,6 @@ export default function UploadCSV() {
       <div className="page-center">
         <h1 className="page-title">CSV Attendance Prediction</h1>
 
-        {/* UPLOAD AREA */}
         <div
           className={`upload-area ${dragActive ? "drag-active" : ""}`}
           onDragEnter={handleDrag}
@@ -150,7 +164,6 @@ export default function UploadCSV() {
           )}
         </div>
 
-        {/* PREVIEW TABLE */}
         {previewData.length > 0 && (
           <div className="preview-card fade-in">
             <h3>CSV Preview (First 5 Rows)</h3>
@@ -185,7 +198,6 @@ export default function UploadCSV() {
           </div>
         )}
 
-        {/* PROGRESS BAR */}
         {loading && (
           <div className="progress-box">
             <div className="progress-bar">

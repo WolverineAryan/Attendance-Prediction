@@ -10,6 +10,14 @@ function findAttendance(row) {
     : 0;
 }
 
+function findRisk(row) {
+  const key = Object.keys(row).find(k =>
+    k.toLowerCase().includes("risk")
+  );
+
+  return key ? String(row[key]).toLowerCase() : "";
+}
+
 function KpiCards({ data = [] }) {
 
   const stats = useMemo(() => {
@@ -29,7 +37,7 @@ function KpiCards({ data = [] }) {
     data.forEach((row) => {
       totalAttendance += findAttendance(row);
 
-      const risk = String(row.risk || "").toLowerCase();
+      const risk = findRisk(row);
 
       if (risk.includes("high")) highRisk++;
       if (risk.includes("low")) lowRisk++;

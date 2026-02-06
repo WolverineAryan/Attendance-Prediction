@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import Layout from "../components/Layout.jsx";
-import axios from "axios";
+import api from "../utils/axiosConfig";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -10,7 +10,6 @@ export default function ManualPredict() {
     attendance: "",
     late: "",
     leaves: "",
-    discipline: "",
   });
 
   const [result, setResult] = useState(null);
@@ -24,25 +23,14 @@ export default function ManualPredict() {
   };
 
   const predict = async () => {
-    const { attendance, late, leaves, discipline } = form;
+    const { attendance, late, leaves } = form;
 
-    if (
-      attendance === "" ||
-      late === "" ||
-      leaves === "" ||
-      discipline === ""
-    ) {
+    if (attendance === "" || late === "" || leaves === "") {
       alert("⚠️ Please enter all details");
       return;
     }
 
-    if (
-      attendance < 0 ||
-      attendance > 100 ||
-      late < 0 ||
-      leaves < 0 ||
-      discipline < 0
-    ) {
+    if (attendance < 0 || attendance > 100 || late < 0 || leaves < 0) {
       alert("⚠️ Please enter valid numeric values");
       return;
     }
@@ -50,13 +38,12 @@ export default function ManualPredict() {
     try {
       setLoading(true);
 
-      const res = await axios.post(
+      const res = await api.post(
         `${API_URL}/predict-manual`,
         {
           attendance: Number(attendance),
           late: Number(late),
           leaves: Number(leaves),
-          discipline: Number(discipline),
         },
         {
           headers: {
@@ -80,7 +67,6 @@ export default function ManualPredict() {
         {/* Page Title */}
         <div className="mb-8">
           <h1 style={{ marginBottom: 20 }}>Manual Attendance Prediction</h1>
-
         </div>
 
         {/* Form Card */}
@@ -104,11 +90,6 @@ export default function ManualPredict() {
                 label: "Total Leaves",
                 name: "leaves",
                 placeholder: "e.g. 2",
-              },
-              {
-                label: "Discipline Score",
-                name: "discipline",
-                placeholder: "e.g. 15",
               },
             ].map((field) => (
               <div key={field.name}>

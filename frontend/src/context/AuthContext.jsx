@@ -1,31 +1,31 @@
 import React, { createContext, useState } from "react";
-import api from "../utils/api";
+import api from "../utils/axiosConfig";
 
 export const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-const login = async (credentials) => {
-  const res = await api.post("/login", credentials);
+  const signup = async (data) => {
+    await api.post("/signup", data);
+  };
 
-  localStorage.setItem("access_token", res.data.access_token);
-  localStorage.setItem("refresh_token", res.data.refresh_token);
-};
+  const login = async (credentials) => {
+    const res = await api.post("/login", credentials);
 
-const signup = async (data) => {
-  const res = await api.post("/signup", data);
-  return res.data;
-};
+    localStorage.setItem("token", res.data.access_token);
+
+    setUser(res.data.user);
+  };
 
   const logout = () => {
+    localStorage.removeItem("token");
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, signup, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
-      

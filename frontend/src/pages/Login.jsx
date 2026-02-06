@@ -17,7 +17,7 @@ export default function Login() {
 
   const handleLogin = async () => {
   if (!email || !password) {
-    alert("Please enter email and password");
+    alert("Enter email and password");
     return;
   }
 
@@ -25,9 +25,10 @@ export default function Login() {
     await login({ email, password });
     navigate("/dashboard");
   } catch (err) {
-    alert("Invalid email or password");
+    alert("Invalid login credentials");
   }
 };
+
 
 
   return (
