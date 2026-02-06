@@ -57,9 +57,7 @@ export default React.memo(function CsvCharts({ data }) {
   const MAX_ROWS = 200;
 
   const safeData =
-    data.length > MAX_ROWS
-      ? data.slice(0, MAX_ROWS)
-      : data;
+    data.length > MAX_ROWS ? data.slice(0, MAX_ROWS) : data;
 
   const isDark = React.useMemo(
     () => document.body.classList.contains("dark"),
@@ -71,36 +69,56 @@ export default React.memo(function CsvCharts({ data }) {
   const tooltipBg = isDark ? "#020617" : "#ffffff";
   const tooltipText = isDark ? "#ffffff" : "#111827";
 
-  // -------- MAIN DATA TRANSFORM --------
-  const chartData = safeData.map((row, i) => ({
-    name:
-      row.student_id ||
-      row.Student_ID ||
-      row.id ||
-      `Student ${i + 1}`,
+  /* -------- MAIN DATA TRANSFORM (MEMOIZED) -------- */
+  const chartData = React.useMemo(() => {
+    return safeData.map((row, i) => {
+      const rawRisk =
+        findColumn(row, ["risk", "prediction", "result", "level", "status"]) ||
+        row.risk ||
+        row["Risk"] ||
+        row["Risk Level"] ||
+        row["Prediction"] ||
+        row["Result"];
 
-    attendance: cleanNumber(
-      findColumn(row, ["attendance", "attend", "percent", "present"])
-    ),
+      return {
+        name:
+          row.student_id ||
+          row.Student_ID ||
+          row.id ||
+          `Student ${i + 1}`,
 
-    late: cleanNumber(findColumn(row, ["late"])),
+        attendance: cleanNumber(
+          findColumn(row, ["attendance", "attend", "percent", "present"])
+        ),
 
-    leaves: cleanNumber(findColumn(row, ["leave", "absent"])),
+        late: cleanNumber(findColumn(row, ["late"])),
 
-    discipline: cleanNumber(
-      findColumn(row, ["discipline", "behavior", "score", "marks"])
-    ),
+        leaves: cleanNumber(findColumn(row, ["leave", "absent"])),
 
-    risk: normalizeRisk(findColumn(row, ["risk"]) || row.risk),
-  }));
+        discipline: cleanNumber(
+          findColumn(row, ["discipline", "behavior", "score", "marks"])
+        ),
 
-  const riskCount = { High: 0, Medium: 0, Low: 0 };
-  chartData.forEach((r) => riskCount[r.risk]++);
+        risk: normalizeRisk(rawRisk),
+      };
+    });
+  }, [safeData]);
 
-  const pieData = Object.keys(riskCount).map((k) => ({
-    name: k,
-    value: riskCount[k],
-  }));
+  /* -------- PIE DATA (MEMOIZED) -------- */
+  const pieData = React.useMemo(() => {
+    const riskCount = { High: 0, Medium: 0, Low: 0 };
+
+    chartData.forEach((r) => {
+      if (riskCount[r.risk] !== undefined) {
+        riskCount[r.risk]++;
+      }
+    });
+
+    return Object.keys(riskCount).map((k) => ({
+      name: k,
+      value: riskCount[k],
+    }));
+  }, [chartData]);
 
   const tooltipStyle = {
     backgroundColor: tooltipBg,

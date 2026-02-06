@@ -1,13 +1,16 @@
 import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout.jsx";
 import KpiCards from "../components/KpiCards.jsx";
 import { DataContext } from "../context/DataContext.jsx";
 import { AuthContext } from "../context/AuthContext.jsx";
 import CSVCharts from "../components/CSVCharts.jsx";
+import Chatbot from "../components/ChatBot.jsx";
+import ChatPopup from "../components/ChatPopup.jsx";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
-
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const pageSize = 100;
 
@@ -64,6 +67,25 @@ export default function Dashboard() {
             </button>
           </div>
         )}
+<button
+  onClick={() => navigate("/chatpopup")}
+  style={{
+    position: "fixed",
+    bottom: 25,
+    right: 25,
+    padding: 14,
+    borderRadius: "50%",
+    background: "#111827",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
+    fontSize: 20,
+    boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+  }}
+>
+  💬
+</button>
+<ChatPopup />
 
       </div>
     </Layout>

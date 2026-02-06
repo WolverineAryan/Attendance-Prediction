@@ -8,6 +8,7 @@ import Login from "./pages/Login.jsx";
 import SignUp from "./pages/Signup.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/manual" element={<ProtectedRoute><ManualPredict /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadCSV /></ProtectedRoute>} />
+
       </Routes>
     </BrowserRouter>
   );

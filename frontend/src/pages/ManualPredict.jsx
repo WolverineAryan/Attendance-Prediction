@@ -79,20 +79,12 @@ export default function ManualPredict() {
 
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-green-900 to-emerald-600 bg-clip-text text-transparent">
-            Manual Attendance Prediction
-          </h1>
+          <h1 style={{ marginBottom: 20 }}>Manual Attendance Prediction</h1>
 
-          <p className="text-gray-600 mt-2">
-            Enter student details to analyze risk level using AI model
-          </p>
         </div>
 
         {/* Form Card */}
-        <div className="group max-w-2xl mx-auto bg-gradient-to-br from-green-900 via-emerald-800 to-green-700 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden transition duration-300 hover:scale-[1.01]">
-
-          {/* Glow Hover Effect */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-40 transition duration-300 bg-gradient-to-r from-lime-400 to-emerald-500 blur-3xl"></div>
+        <div className="group max-w-2xl mx-auto bg-emerald-900 from-green-900 via-emerald-800 to-green-700 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden transition duration-300 hover:scale-[1.01]">
 
           <div className="relative z-10 space-y-6">
 

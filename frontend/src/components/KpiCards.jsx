@@ -1,8 +1,17 @@
 import React, { useMemo } from "react";
 
+function findAttendance(row) {
+  const key = Object.keys(row).find(k =>
+    k.toLowerCase().includes("attend")
+  );
+
+  return key
+    ? Number(String(row[key]).replace(/[% ,]/g, "")) || 0
+    : 0;
+}
+
 function KpiCards({ data = [] }) {
 
-  // Memoized calculations – only recompute when data changes
   const stats = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
       return {
@@ -18,8 +27,7 @@ function KpiCards({ data = [] }) {
     let lowRisk = 0;
 
     data.forEach((row) => {
-      const attendance = Number(row.attendance || 0);
-      totalAttendance += attendance;
+      totalAttendance += findAttendance(row);
 
       const risk = String(row.risk || "").toLowerCase();
 
@@ -51,7 +59,6 @@ function KpiCards({ data = [] }) {
   );
 }
 
-// Small reusable card
 function Card({ title, value }) {
   return (
     <div style={{
@@ -67,5 +74,4 @@ function Card({ title, value }) {
   );
 }
 
-// Prevent unnecessary re-renders
 export default React.memo(KpiCards);

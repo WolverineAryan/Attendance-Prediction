@@ -209,16 +209,20 @@ def upload_data():
 # ===============================
 @app.route("/chat", methods=["POST"])
 def chat():
-    question = request.json.get("question")
+    try:
+        data = request.json or {}
+        question = data.get("message", "")
 
-    if not uploaded_csv_text:
-        return jsonify({
-            "reply": "Please upload a CSV file first before asking questions."
-        })
+        if not question:
+            return jsonify({"reply": "Please ask a question."})
 
-    answer = ask_ollama(question, uploaded_csv_text)
+        answer = ask_ollama(question, uploaded_csv_text)
+        return jsonify({"reply": answer})
 
-    return jsonify({"reply": answer})
+    except Exception as e:
+        print("CHAT API ERROR:", e)
+        return jsonify({"reply": "Server error. Please try again."}), 200
+
 
 
 # ===============================
