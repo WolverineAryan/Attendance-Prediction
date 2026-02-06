@@ -15,10 +15,20 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    login({ email });
+  const handleLogin = async () => {
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
+  }
+
+  try {
+    await login({ email, password });
     navigate("/dashboard");
-  };
+  } catch (err) {
+    alert("Invalid email or password");
+  }
+};
+
 
   return (
     <div

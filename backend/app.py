@@ -3,23 +3,40 @@ from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import joblib
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity
+)
+
+
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
+
 from models import db, User
 from ai_chat import ask_ollama
 
 app = Flask(__name__)
-CORS(app)
+
+# ----- CONFIGURATION -----
+CORS(app, supports_credentials=True)
+
 app.config["JWT_SECRET_KEY"] = "your-secret-key-here"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///attendance.db"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 15 * 60       # 15 minutes
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 7 * 24 * 60 * 60   # 7 days
+
 
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
-db.init_app(app)
-with app.app_context():
-    db.create_all() 
 
-    
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
 uploaded_csv_text = ""
 
 print("✅ app.py loaded")
@@ -37,8 +54,9 @@ model = joblib.load("attendance_model.pkl")
 def home():
     return "Backend running successfully"
 
+
 # ===============================
-# SignUP ROUTE
+# SIGNUP ROUTE
 # ===============================
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -60,6 +78,7 @@ def signup():
 
     return jsonify({"message": "Signup successful"})
 
+
 # ===============================
 # LOGIN ROUTE
 # ===============================
@@ -75,21 +94,34 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
 
     return jsonify({
-        "token": token,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "user": {
             "id": user.id,
             "name": user.name,
             "email": user.email
         }
     })
+@app.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    user_id = get_jwt_identity()
+
+    new_access_token = create_access_token(identity=user_id)
+
+    return jsonify({
+        "access_token": new_access_token
+    })
 
 # ===============================
-# MANUAL PREDICTION
+# MANUAL PREDICTION (PROTECTED)
 # ===============================
 @app.route("/predict-manual", methods=["POST"])
+@jwt_required()
 def predict_manual():
     data = request.get_json()
 
@@ -102,7 +134,6 @@ def predict_manual():
 
     model.predict(X)
 
-    # RULE BASED OVERRIDE LOGIC
     if attendance < 50 or leaves > 8 or late > 12:
         risk = "High"
         reason = "Very low attendance or excessive leaves/late"
@@ -121,15 +152,15 @@ def predict_manual():
 
 
 # ===============================
-# CSV PREDICTION
+# CSV PREDICTION (PROTECTED)
 # ===============================
 @app.route("/predict-csv", methods=["POST"])
+@jwt_required()
 def predict_csv():
     try:
         file = request.files["file"]
         df = pd.read_csv(file)
 
-        # ---- FIX: Remove existing risk column ----
         if "risk" in df.columns:
             df = df.drop(columns=["risk"])
 
@@ -194,9 +225,10 @@ def predict_csv():
 
 
 # ===============================
-# STORE UPLOADED CSV DATA FOR AI
+# STORE CSV DATA FOR AI (PROTECTED)
 # ===============================
 @app.route("/upload-data", methods=["POST"])
+@jwt_required()
 def upload_data():
     global uploaded_csv_text
 
@@ -204,12 +236,16 @@ def upload_data():
 
     return jsonify({"message": "CSV data stored for AI chatbot"})
 
+
 # ===============================
-# CHATBOT ROUTE
+# CHATBOT ROUTE (PROTECTED)
 # ===============================
 @app.route("/chat", methods=["POST"])
+@jwt_required()
 def chat():
     try:
+        user_id = get_jwt_identity()
+
         data = request.json or {}
         question = data.get("message", "")
 
@@ -217,12 +253,24 @@ def chat():
             return jsonify({"reply": "Please ask a question."})
 
         answer = ask_ollama(question, uploaded_csv_text)
-        return jsonify({"reply": answer})
+
+        return jsonify({
+            "reply": answer,
+            "user_id": user_id
+        })
 
     except Exception as e:
         print("CHAT API ERROR:", e)
-        return jsonify({"reply": "Server error. Please try again."}), 200
+        return jsonify({"reply": str(e)}), 500
 
+
+# ===============================
+# LOGOUT ROUTE (OPTIONAL)
+# ===============================
+@app.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    return jsonify({"message": "Logged out successfully"})
 
 
 # ===============================

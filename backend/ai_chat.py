@@ -120,6 +120,12 @@ def ask_ollama(prompt, csv_text, history=None):
 
     prompt = str(prompt).strip()
 
+    # Use RAG to extract only relevant rows
+    context = search_relevant_rows(prompt, csv_text)
+
+    # If RAG found nothing, fallback to small slice
+    if not context.strip():
+        context = csv_text[:4000]
 
     system_prompt = f"""
 You are ANDY – a smart assistant for attendance analytics.
@@ -166,8 +172,8 @@ DATA RULES:
 - If the information is not available, say:
   "I cannot find that information in the attendance data."
 
-RELEVANT ATTENDANCE DATA:
-{csv_context}
+RELEVANT DATA:
+{context}
 
 User question:
 {prompt}

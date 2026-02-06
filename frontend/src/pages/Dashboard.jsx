@@ -7,6 +7,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import CSVCharts from "../components/CSVCharts.jsx";
 import Chatbot from "../components/ChatBot.jsx";
 import ChatPopup from "../components/ChatPopup.jsx";
+import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
@@ -44,6 +45,13 @@ export default function Dashboard() {
         <KpiCards data={safeData} />
 <CSVCharts data={safeData} />
 
+<button
+  onClick={exportDashboardAsZip}
+  className=" px-6 py-3 mb-6 rounded-xl font-bold bg-green-700 text-white hover:bg-green-800 transition"
+>
+  📄 Export Charts as PDF
+</button>
+
         {/* PAGINATION */}
         {csvData.length > pageSize && (
           <div
@@ -54,7 +62,7 @@ export default function Dashboard() {
               alignItems: "center",
             }}
           >
-            <button onClick={prevPage} disabled={page === 1}>
+            <button onClick={prevPage} disabled={page === 1}> 
               Previous
             </button>
 
