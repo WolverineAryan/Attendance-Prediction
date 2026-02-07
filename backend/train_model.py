@@ -54,6 +54,7 @@ model = RandomForestClassifier(
     max_depth=4,              # restrict depth
     min_samples_split=25,
     min_samples_leaf=15,
+    class_weight="balanced",
     max_features=2,
     random_state=42
 )

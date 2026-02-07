@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ManualPredict() {
   const [form, setForm] = useState({
-    attendance: "",
+    dayspresent: "",
     late: "",
     leaves: "",
   });
@@ -23,42 +23,43 @@ export default function ManualPredict() {
   };
 
   const predict = async () => {
-    const { attendance, late, leaves } = form;
+  const { dayspresent, late, leaves } = form;
 
-    if (attendance === "" || late === "" || leaves === "") {
-      alert("⚠️ Please enter all details");
-      return;
-    }
+  if (dayspresent === "" || late === "" || leaves === "") {
+    alert("⚠️ Please enter all details");
+    return;
+  }
 
-    if (attendance < 0 || attendance > 100 || late < 0 || leaves < 0) {
-      alert("⚠️ Please enter valid numeric values");
-      return;
-    }
+  try {
+    setLoading(true);
 
-    try {
-      setLoading(true);
+    console.log("Sending:", {
+      dayspresent: Number(dayspresent),
+      latedays: Number(late),
+      leavestaken: Number(leaves),
+    });
 
-      const res = await api.post(
-        `${API_URL}/predict-manual`,
-        {
-          attendance: Number(attendance),
-          late: Number(late),
-          leaves: Number(leaves),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    const res = await api.post(
+      "/predict-manual",
+      {
+        dayspresent: Number(dayspresent),
+        latedays: Number(late),
+        leavestaken: Number(leaves),
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
-      setResult(res.data);
-    } catch (err) {
-      alert("❌ Prediction failed. Backend not reachable.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setResult(res.data);
+  } catch (err) {
+    console.error(err.response?.data);
+    alert("❌ Prediction failed: " + (err.response?.data?.error || err.message));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Layout>
@@ -77,8 +78,8 @@ export default function ManualPredict() {
             {/* Input Fields */}
             {[
               {
-                label: "Attendance Percentage",
-                name: "attendance",
+                label: "Days Attended",
+                name: "dayspresent",  
                 placeholder: "e.g. 80",
               },
               {
@@ -125,12 +126,13 @@ export default function ManualPredict() {
 
             <div
               className={`p-6 rounded-2xl shadow-xl text-white transition-all duration-300 ${
-                result.risk === "High"
-                  ? "bg-gradient-to-r from-red-600 to-red-500"
-                  : result.risk === "Medium"
-                  ? "bg-gradient-to-r from-yellow-600 to-yellow-500"
-                  : "bg-gradient-to-r from-green-600 to-green-500"
-              }`}
+  String(result.risk).toLowerCase().includes("high")
+    ? "bg-gradient-to-r from-red-600 to-red-500"
+    : String(result.risk).toLowerCase().includes("medium")
+    ? "bg-gradient-to-r from-yellow-600 to-yellow-500"
+    : "bg-gradient-to-r from-green-600 to-green-500"
+}`} 
+
             >
               <h2 className="text-2xl font-bold">
                 Prediction Result
