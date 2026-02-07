@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ChartsPreview from "../components/ChartsPreview.jsx";
+import heroImg from "../assets/landing-illustration.png";
 
 // ================= GLASSMORPHISM STAT CARD =================
 function StatCard({ title, value }) {
@@ -43,10 +44,10 @@ function StatsSection() {
       </h2>
 
       <div className="flex flex-wrap justify-center gap-20 px-10">
-        <StatCard title="Students Analyzed" value={1200} />
-        <StatCard title="Prediction Rate %" value={100} />
-        <StatCard title="Model Accuracy" value={80} />
-        <StatCard title="Recalls %" value={66} />
+        <StatCard title="F1-Score" value={87} />
+        <StatCard title="Prediction Rate %" value={88} />
+        <StatCard title="Model Accuracy" value={86} />
+        <StatCard title="Recalls %" value={86} />
       </div>
     </section>
   );
@@ -82,43 +83,16 @@ export default function Landing() {
       </header>
 
       {/* HERO */}
-      <section className="flex-1 flex flex-col lg:flex-row items-center justify-center px-10 hero-pattern py-16">
-
-        <div className="lg:w-1/2 space-y-6 animate-slideDown">
-
-          <h2 className="text-6xl font-extrabold text-gray-900">
-            Smart Attendance  
-            <span className="text-apsOlive"> Analytics</span>
-          </h2>
-
-          <p className="text-xl text-gray-700">
-            AI-powered platform to analyze attendance trends, predict student performance and generate smart insights.
-          </p>
-
-          <div className="flex space-x-4 pt-4">
-            <button
-              onClick={() => navigate("/login")}
-              className="px-8 py-3 bg-apsYellow rounded-full font-bold hover:scale-105 transition"
-            >
-              Get Started
-            </button>
-
-            <button
-              onClick={() => navigate("/signup")}
-              className="px-8 py-3 bg-apsGreen text-white rounded-full font-bold hover:scale-105 transition"
-            >
-              Create Account
-            </button>
-          </div>
-        </div>
-
-        <div className="lg:w-1/2 flex justify-center mt-10 lg:mt-0 animate-float">
+      <section className="flex-1 flex flex-col lg:flex-row items-center justify-center px-1 hero-pattern py-16">
+        <div className="w-full h-[600px] flex justify-center items-center mt-10 lg:mt-0 ">
           <img
-            src="/landing-illustration.png"
-            alt="Analytics"
-            className="w-[520px]"
+          src={heroImg}
+          alt="Analytics"
+          className="w-full h-full object-cover"
           />
-        </div>
+      </div>
+
+
       </section>
 
       <StatsSection />
