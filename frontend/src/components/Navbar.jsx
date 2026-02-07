@@ -81,22 +81,6 @@ export default function Navbar() {
 
       {/* RIGHT - Actions */}
       <div className="flex items-center gap-4">
-
-        <button
-          onClick={toggleTheme}
-          className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-        >
-          {theme === "light" ? (
-            <>
-              <Moon size={16} /> Dark
-            </>
-          ) : (
-            <>
-              <Sun size={16} /> Light
-            </>
-          )}
-        </button>
-
         <button
           onClick={logout}
           className="flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition"

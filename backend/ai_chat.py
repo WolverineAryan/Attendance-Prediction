@@ -160,14 +160,14 @@ Answer as ANDY (direct and concise):
         "prompt": system_prompt,
         "stream": False,
         "options": {
-            "temperature": 0.25,
-            "top_p": 0.8,
-            "max_tokens": 200
+            "temperature": 0.2,
+            "top_p": 0.7,
+            "max_tokens": 150
         }
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
 
         if response.status_code != 200:
             print("OLLAMA ERROR:", response.text)
