@@ -4,17 +4,21 @@ import KpiCards from "../components/KpiCards.jsx";
 import { DataContext } from "../context/DataContext.jsx";
 import CSVCharts from "../components/CSVCharts.jsx";
 import ChatPopup from "../components/ChatPopup.jsx";
+import ColumnMapper from "../components/ColumnMapper.jsx";
 import { exportDashboardAsZip } from "../utils/exportDashboardZip.js";
 
 export default function Dashboard() {
   const { csvData } = useContext(DataContext);
+
+  // State to hold user-mapped data
+  const [mappedData, setMappedData] = useState(null);
 
   const [page, setPage] = useState(1);
   const pageSize = 100;
 
   const totalPages = Math.ceil(csvData.length / pageSize);
 
-  // PAGINATED DATA ONLY FOR TABLES (NOT KPIs/Charts)
+  // PAGINATED DATA ONLY FOR TABLES (not used for KPIs/Charts)
   const safeData = Array.isArray(csvData)
     ? csvData.slice((page - 1) * pageSize, page * pageSize)
     : [];
@@ -33,21 +37,32 @@ export default function Dashboard() {
 
         <h1 style={{ marginBottom: 20 }}>Dashboard</h1>
 
-        {/* KPI CARDS SHOULD USE FULL DATASET */}
-        <KpiCards data={csvData} />
+        {/* ===== AUTO COLUMN MAPPING STEP ===== */}
+        {!mappedData ? (
+          <ColumnMapper
+            data={csvData}
+            onMapComplete={(mapped) => setMappedData(mapped)}
+          />
+        ) : (
+          <>
+            {/* ===== KPIs USING MAPPED DATA ===== */}
+            <KpiCards data={mappedData} />
 
-        {/* CHARTS ALSO USE FULL DATA */}
-        <CSVCharts data={csvData} />
+            {/* ===== CHARTS USING MAPPED DATA ===== */}
+            <CSVCharts data={mappedData} />
 
-          <br></br>
+            <br />
 
-        <button
-          onClick={exportDashboardAsZip}
-          className="px-6 py-3 mb-6 rounded-xl font-bold bg-green-700 text-white hover:bg-green-800 transition"
-        >
-          📄 Export Charts as PDF
-        </button>
+            <button
+              onClick={exportDashboardAsZip}
+              className="px-6 py-3 mb-6 rounded-xl font-bold bg-green-700 text-white hover:bg-green-800 transition"
+            >
+              📄 Export Charts as PDF
+            </button>
+          </>
+        )}
 
+        {/* ===== CHATBOT POPUP ===== */}
         <ChatPopup />
 
       </div>

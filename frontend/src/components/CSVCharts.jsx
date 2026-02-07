@@ -17,116 +17,126 @@ import {
   Area,
 } from "recharts";
 
-/* ================= COLORS ================= */
+/* ===== COLORS ===== */
 const COLORS = {
   High: "#ef4444",
   Medium: "#f59e0b",
   Low: "#22c55e",
 };
 
-/* ================= HELPERS ================= */
+/* ===== HELPERS ===== */
+
 const cleanNumber = (value) =>
-  Number(String(value || 0).replace("%", "").replace(",", "").trim()) || 0;
+  Number(String(value || 0).replace(/[% ,]/g, "")) || 0;
 
-const findColumn = (row, keywords) => {
-  const cols = Object.keys(row);
-  return row[
-    cols.find((c) =>
-      keywords.some((k) =>
-        c.toLowerCase().replace(/\s|%|_/g, "").includes(k)
-      )
-    )
-  ];
-};
+function findColumn(row, keywords) {
+  if (!row) return null;
 
-const normalizeRisk = (value) => {
+  const keys = Object.keys(row);
+
+  for (let key of keys) {
+    const clean = key.toLowerCase().replace(/[%_ ]/g, "");
+
+    for (let k of keywords) {
+      if (clean.includes(k)) return key;
+    }
+  }
+
+  return null;
+}
+
+/* ----- Attendance Normalizer ----- */
+function getAttendance(row) {
+  const col = findColumn(row, ["attendance", "attend", "percent", "present"]);
+
+  if (!col) return 0;
+
+  let value = cleanNumber(row[col]);
+
+  if (value > 100) {
+    const totalCol = findColumn(row, ["totalworkingdays", "totaldays"]);
+
+    if (totalCol) {
+      const total = cleanNumber(row[totalCol]);
+      if (total > 0) value = (value / total) * 100;
+    } else {
+      value = Math.min(value, 100);
+    }
+  }
+
+  return value;
+}
+
+/* ----- Risk Normalizer ----- */
+function normalizeRisk(value) {
   if (!value) return "Low";
-  const v = value.toString().toLowerCase();
-  if (v.includes("high")) return "High";
-  if (v.includes("medium")) return "Medium";
-  if (v.includes("low")) return "Low";
-  return "Low";
-};
 
-/* ================================================= */
+  const v = String(value).toLowerCase();
+
+  if (v.includes("high") || v === "2" || v === "1") return "High";
+  if (v.includes("medium")) return "Medium";
+  if (v.includes("low") || v === "0") return "Low";
+
+  return "Low";
+}
+
+function getRisk(row) {
+  const col = findColumn(row, ["risk", "predictedrisk", "risklevel"]);
+
+  return normalizeRisk(col ? row[col] : "");
+}
+
+/* ===== MAIN COMPONENT ===== */
 
 export default React.memo(function CsvCharts({ data }) {
   if (!Array.isArray(data) || data.length === 0) return null;
 
-  // -------- PERFORMANCE LIMIT --------
   const MAX_ROWS = 200;
+  const safeData = data.length > MAX_ROWS ? data.slice(0, MAX_ROWS) : data;
 
-  const safeData =
-    data.length > MAX_ROWS ? data.slice(0, MAX_ROWS) : data;
-
-  const isDark = React.useMemo(
-    () => document.body.classList.contains("dark"),
-    []
-  );
+  const isDark = document.body.classList.contains("dark");
 
   const axisColor = isDark ? "#e5e7eb" : "#374151";
   const gridColor = isDark ? "#334155" : "#e5e7eb";
-  const tooltipBg = isDark ? "#020617" : "#ffffff";
-  const tooltipText = isDark ? "#ffffff" : "#111827";
 
-  /* -------- MAIN DATA TRANSFORM (MEMOIZED) -------- */
+  /* ----- TRANSFORM DATA ----- */
   const chartData = React.useMemo(() => {
-    return safeData.map((row, i) => {
-      const rawRisk =
-        findColumn(row, ["risk", "prediction", "result", "level", "status"]) ||
-        row.risk ||
-        row["Risk"] ||
-        row["Risk Level"] ||
-        row["Prediction"] ||
-        row["Result"];
+    return safeData.map((row, i) => ({
+      name: row.studentid || row.Student_ID || `S${i + 1}`,
 
-      return {
-        name:
-          row.student_id ||
-          row.Student_ID ||
-          row.id ||
-          `Student ${i + 1}`,
+      attendance: getAttendance(row),
 
-        attendance: cleanNumber(
-          findColumn(row, ["attendance", "attend", "percent", "present"])
-        ),
+      late: cleanNumber(findColumn(row, ["late"]) ? row[findColumn(row, ["late"])] : 0),
 
-        late: cleanNumber(findColumn(row, ["late"])),
+      leaves: cleanNumber(
+        findColumn(row, ["leave", "absent"])
+          ? row[findColumn(row, ["leave", "absent"])]
+          : 0
+      ),
 
-        leaves: cleanNumber(findColumn(row, ["leave", "absent"])),
+      discipline: cleanNumber(
+        findColumn(row, ["discipline", "behavior", "score"])
+          ? row[findColumn(row, ["discipline", "behavior", "score"])]
+          : 0
+      ),
 
-        discipline: cleanNumber(
-          findColumn(row, ["discipline", "behavior", "score", "marks"])
-        ),
-
-        risk: normalizeRisk(rawRisk),
-      };
-    });
+      risk: getRisk(row),
+    }));
   }, [safeData]);
 
-  /* -------- PIE DATA (MEMOIZED) -------- */
+  /* ----- PIE DATA ----- */
   const pieData = React.useMemo(() => {
-    const riskCount = { High: 0, Medium: 0, Low: 0 };
+    const count = { High: 0, Medium: 0, Low: 0 };
 
     chartData.forEach((r) => {
-      if (riskCount[r.risk] !== undefined) {
-        riskCount[r.risk]++;
-      }
+      count[r.risk] = (count[r.risk] || 0) + 1;
     });
 
-    return Object.keys(riskCount).map((k) => ({
+    return Object.keys(count).map((k) => ({
       name: k,
-      value: riskCount[k],
+      value: count[k],
     }));
   }, [chartData]);
-
-  const tooltipStyle = {
-    backgroundColor: tooltipBg,
-    border: "none",
-    borderRadius: 10,
-    color: tooltipText,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-  };
 
   return (
     <div
@@ -137,110 +147,86 @@ export default React.memo(function CsvCharts({ data }) {
         marginTop: 40,
       }}
     >
-      {/* ================= ATTENDANCE ================= */}
-      <div id="attendance-chart">
-        <ChartCard dark={isDark} title="Attendance Percentage">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fill: axisColor }} />
-              <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend />
+      {/* Attendance Bar Chart */}
+      <ChartCard title="Attendance Percentage">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="attendance" fill="#6366f1" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-              <Bar
-                dataKey="attendance"
-                fill="#6366f1"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+      {/* Risk Pie Chart */}
+      <ChartCard title="Risk Distribution">
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={110}
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={index} fill={COLORS[entry.name]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-      {/* ================= PIE ================= */}
-      <div id="risk-pie-chart">
-        <ChartCard dark={isDark} title="Risk Distribution">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                outerRadius={110}
-                paddingAngle={4}
-              >
-                {pieData.map((e, i) => (
-                  <Cell key={i} fill={COLORS[e.name]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+      {/* Late vs Leaves Line Chart */}
+      <ChartCard title="Late Days vs Leaves">
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis tick={{ fill: axisColor }} />
+            <Tooltip />
+            <Legend />
+            <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
+            <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-      {/* ================= LINE ================= */}
-      <div id="late-leaves-chart">
-        <ChartCard dark={isDark} title="Late vs Leaves">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fill: axisColor }} />
-              <YAxis tick={{ fill: axisColor }} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend />
-              <Line dataKey="late" stroke="#f59e0b" strokeWidth={3} />
-              <Line dataKey="leaves" stroke="#ef4444" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      {/* ================= AREA ================= */}
-      <div id="discipline-chart">
-        <ChartCard dark={isDark} title="Discipline Score">
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fill: axisColor }} />
-              <YAxis domain={[0, 100]} tick={{ fill: axisColor }} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Area
-                type="monotone"
-                dataKey="discipline"
-                stroke="#22c55e"
-                fill="url(#disc)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+      {/* Discipline Area Chart */}
+      <ChartCard title="Discipline Score">
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={chartData}>
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fill: axisColor }} />
+            <YAxis tick={{ fill: axisColor }} />
+            <Tooltip />
+            <Area
+              type="monotone"
+              dataKey="discipline"
+              stroke="#22c55e"
+              fill="#22c55e"
+              fillOpacity={0.3}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
     </div>
   );
 });
 
-/* ================= CARD ================= */
-
-function ChartCard({ title, children, dark }) {
+/* ===== CARD COMPONENT ===== */
+function ChartCard({ title, children }) {
   return (
     <div
       style={{
-        background: dark ? "#020617" : "#ffffff",
-        color: dark ? "#f8fafc" : "#111827",
+        background: "#ffffff",
         padding: 25,
         borderRadius: 18,
-        boxShadow: dark
-          ? "0 12px 35px rgba(0,0,0,0.6)"
-          : "0 10px 25px rgba(0,0,0,0.06)",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
       }}
     >
       <h3 style={{ marginBottom: 15 }}>{title}</h3>
