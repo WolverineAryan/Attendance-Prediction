@@ -4,12 +4,10 @@ import api from "../utils/axiosConfig";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ChatBot({ onNewMessage }) {
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem("andy_history");
-    return saved
-      ? JSON.parse(saved)
-      : [{ text: "Hi! I’m ANDY. Ask me anything.", sender: "bot" }];
-  });
+  const [messages, setMessages] = useState([
+  { text: "Hi! I’m ANDY. Ask me anything.", sender: "bot" }
+]);
+
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,11 +17,6 @@ export default function ChatBot({ onNewMessage }) {
   // Auto scroll
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Save history
-  useEffect(() => {
-    localStorage.setItem("andy_history", JSON.stringify(messages));
   }, [messages]);
 
   const sendMessage = async () => {
@@ -36,7 +29,7 @@ export default function ChatBot({ onNewMessage }) {
     try {
       setLoading(true);
 
-      const res = await axios.post(`${API_URL}/chat`, {
+      const res = await api.post(`${API_URL}/chat`, {
         message: input,
       });
 

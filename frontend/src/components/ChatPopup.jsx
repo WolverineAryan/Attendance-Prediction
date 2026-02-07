@@ -1,26 +1,34 @@
 import React, { useState, useRef, useEffect } from "react";
 import ChatBot from "./ChatBot.jsx";
 
+import { FaRobot, FaTimes, FaMinus, FaExpand } from "react-icons/fa";
+
 export default function ChatPopup() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
 
   const popupRef = useRef(null);
 
-  const [position, setPosition] = useState({ x: 50, y: 50 });
-  const [size, setSize] = useState({ width: 380, height: 520 });
+  // Start popup near bottom-right where button exists
+  const [position, setPosition] = useState({
+    x: window.innerWidth - 420,
+    y: window.innerHeight - 580,
+  });
+
+  const [size] = useState({ width: 380, height: 520 });
 
   const drag = useRef({ active: false, offsetX: 0, offsetY: 0 });
 
-  // Load saved state
-  useEffect(() => {
-    const saved = localStorage.getItem("chat_open");
-    if (saved === "true") setOpen(true);
-  }, []);
+  // ===== OPEN CHAT (RESET POSITION) =====
+  const openChat = () => {
+    setPosition({
+      x: window.innerWidth - 420,
+      y: window.innerHeight - 580,
+    });
 
-  useEffect(() => {
-    localStorage.setItem("chat_open", open);
-  }, [open]);
+    setOpen(true);
+    setMinimized(false);
+  };
 
   // ===== DRAGGING =====
   const startDrag = (e) => {
@@ -34,9 +42,16 @@ export default function ChatPopup() {
   const onMouseMove = (e) => {
     if (!drag.current.active) return;
 
+    let newX = e.clientX - drag.current.offsetX;
+    let newY = e.clientY - drag.current.offsetY;
+
+    // Prevent popup from leaving screen
+    newX = Math.max(10, Math.min(newX, window.innerWidth - size.width - 10));
+    newY = Math.max(10, Math.min(newY, window.innerHeight - size.height - 10));
+
     setPosition({
-      x: e.clientX - drag.current.offsetX,
-      y: e.clientY - drag.current.offsetY,
+      x: newX,
+      y: newY,
     });
   };
 
@@ -52,13 +67,37 @@ export default function ChatPopup() {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", stopDrag);
     };
-  }, [position]);
+  });
 
   return (
     <>
- 
+      {/* ===== FLOATING CHATBOT ICON ===== */}
+      {!open && (
+        <button
+          onClick={openChat}
+          style={{
+            position: "fixed",
+            bottom: 25,
+            right: 25,
+            padding: 14,
+            borderRadius: "50%",
+            background: "#065f46",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 22,
+            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <FaRobot />
+        </button>
+      )}
 
-      {/* CHAT WINDOW */}
+      {/* ===== CHAT WINDOW ===== */}
       {open && (
         <div
           ref={popupRef}
@@ -75,7 +114,6 @@ export default function ChatPopup() {
             display: "flex",
             flexDirection: "column",
             zIndex: 999,
-            resize: "both",
             overflow: "hidden",
           }}
         >
@@ -92,21 +130,34 @@ export default function ChatPopup() {
               alignItems: "center",
             }}
           >
-            <span className="font-semibold">ANDY – Assistant</span>
+            <span style={{ fontWeight: "bold", display: "flex", alignItems: "center" }}>
+              <FaRobot style={{ marginRight: 6 }} />
+              ANDY – Assistant
+            </span>
 
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={() => setMinimized(!minimized)}
-                style={{ background: "none", border: "none", color: "white" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "white",
+                  cursor: "pointer",
+                }}
               >
-                {minimized ? "▲" : "▼"}
+                {minimized ? <FaExpand /> : <FaMinus />}
               </button>
 
               <button
                 onClick={() => setOpen(false)}
-                style={{ background: "none", border: "none", color: "white" }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "white",
+                  cursor: "pointer",
+                }}
               >
-                ✖
+                <FaTimes />
               </button>
             </div>
           </div>

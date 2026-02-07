@@ -4,22 +4,32 @@ from functools import lru_cache
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 
-# ---------- RAG STYLE SEARCH ----------
+# ---------- RAG STYLE SEARCH (IMPROVED) ----------
 def search_relevant_rows(prompt, csv_text):
-    """
-    Return only CSV rows related to the user question.
-    Acts as a mini RAG layer.
-    """
     lines = csv_text.split("\n")
-    keywords = prompt.lower().split()
 
-    matches = [
-        line for line in lines
-        if any(k in line.lower() for k in keywords)
-    ]
+    prompt = prompt.lower()
+    keywords = prompt.replace("?", "").split()
 
-    # Limit to top 20 relevant rows
-    return "\n".join(matches[:20])
+    scored = []
+
+    for line in lines:
+        score = 0
+        line_lower = line.lower()
+
+        for k in keywords:
+            if k in line_lower:
+                score += 1
+
+        if score > 0:
+            scored.append((score, line))
+
+    # Sort by relevance score
+    scored.sort(reverse=True, key=lambda x: x[0])
+
+    top_lines = [line for score, line in scored[:25]]
+
+    return "\n".join(top_lines)
 
 
 # ---------- INTENT DETECTION ----------
@@ -38,16 +48,14 @@ def detect_intent(prompt):
     if any(w in p for w in ["average", "mean", "stats", "statistics"]):
         return "statistics"
 
-    return "general"
+    if "summary" in p:
+        return "summary"
 
+    return "general"
 
 
 # ---------- SIMPLE STAT HANDLER ----------
 def calculate_stats(csv_text):
-    """
-    Handle simple numeric questions without AI.
-    Example: average attendance.
-    """
     try:
         lines = csv_text.split("\n")[1:]  # skip header
         total = 0
@@ -70,62 +78,42 @@ def calculate_stats(csv_text):
         return "I’m unable to calculate statistics from this data."
 
 
+# ---------- CSV SUMMARIZATION ----------
+def summarize_csv(csv_text):
+    try:
+        lines = csv_text.strip().split("\n")
+
+        if len(lines) < 2:
+            return "The uploaded CSV seems empty or invalid."
+
+        total_rows = len(lines) - 1  # minus header
+        headers = lines[0].split(",")
+
+        return f"""
+📊 DATASET SUMMARY
+
+- Total records: {total_rows}
+- Columns: {", ".join(headers)}
+
+You can ask questions like:
+
+• How many students are high risk?
+• Who has lowest attendance?
+• Average attendance?
+• Show top 5 students by attendance
+"""
+    except Exception:
+        return "Unable to generate summary from the dataset."
+
+
 # ---------- CACHING LAYER ----------
 @lru_cache(maxsize=100)
 def cached_ai_answer(prompt, context):
     return ask_ollama_core(prompt, context)
 
 
-# ---------- MAIN CHATBOT LOGIC ----------
-def ask_ollama(prompt, csv_text, history=None):
-    """
-    Main entry point with:
-    - intent detection
-    - RAG search
-    - caching
-    """
-
-    if history is None:
-        history = []
-
-    # Detect intent first
-    intent = detect_intent(prompt)
-
-    # If simple stats question, answer without AI
-    if intent == "statistics":
-        return calculate_stats(csv_text)
-
-    # Use RAG to extract only relevant rows
-    context = search_relevant_rows(prompt, csv_text)
-
-    # If RAG found nothing, fallback to small slice
-    if not context.strip():
-        context = csv_text[:4000]
-
-    # Use cached response if available
-    answer = cached_ai_answer(prompt, context)
-
-    # Save to history
-    history.append({"user": prompt, "andy": answer})
-    history.clear()  # Clear history to save memory, or implement a smarter history management
-
-    return answer
-
-
 # ---------- CORE AI CALL ----------
-def ask_ollama(prompt, csv_text, history=None):
-
-    if not prompt:
-        return "Please ask me a question."
-
-    prompt = str(prompt).strip()
-
-    # Use RAG to extract only relevant rows
-    context = search_relevant_rows(prompt, csv_text)
-
-    # If RAG found nothing, fallback to small slice
-    if not context.strip():
-        context = csv_text[:4000]
+def ask_ollama_core(prompt, context):
 
     system_prompt = f"""
 You are ANDY – a smart assistant for attendance analytics.
@@ -144,6 +132,7 @@ TONE RULES:
 STRICT ANSWERING RULES:
 - Read the user question carefully.
 - Respond ONLY to what is asked.
+-respond only to the question asked and not give extra data and just give the sufficient answer
 - Do NOT add extra statistics.
 - Do NOT list unrelated rows.
 
@@ -151,21 +140,6 @@ FORMAT RULES:
 - Prefer 1–3 short sentences.
 - Use bullet points only if needed.
 - Never start with long introductions.
-
-EXAMPLES OF GOOD ANSWERS:
-
-User: "Who has low attendance?"
-Andy: These students have attendance below 60%:  
-- Rohan Patil – 42%  
-- Neha Rao – 55%
-
-User: "How many students are high risk?"
-Andy: 7 students are currently marked as high risk.
-
-User: "Give me low attendance list"
-Andy: Here are the students with low attendance:  
-- Aman – 48%  
-- Pooja – 51%
 
 DATA RULES:
 - Answer ONLY using the data below.
@@ -212,3 +186,38 @@ Answer as ANDY (direct and concise):
     except Exception as e:
         print("CHATBOT EXCEPTION:", e)
         return "I’m unable to respond right now. Please try again later."
+
+
+# ---------- MAIN CHATBOT LOGIC ----------
+def ask_ollama(prompt, csv_text, history=None):
+
+    # BLOCK ANSWERS IF NO CSV UPLOADED
+    if not csv_text or csv_text.strip() == "":
+        return "Please upload a CSV file first so I can analyze attendance data."
+
+    if not prompt:
+        return "Please ask me a question."
+
+    prompt = str(prompt).strip()
+
+    intent = detect_intent(prompt)
+
+    # SUMMARY REQUEST
+    if intent == "summary":
+        return summarize_csv(csv_text)
+
+    # SIMPLE STAT QUESTIONS
+    if intent == "statistics":
+        return calculate_stats(csv_text)
+
+    # USE RAG TO GET RELEVANT ROWS
+    context = search_relevant_rows(prompt, csv_text)
+
+    # If RAG found nothing, fallback to small slice
+    if not context.strip():
+        context = csv_text[:4000]
+
+    # Use cached AI response
+    answer = cached_ai_answer(prompt, context)
+
+    return answer
