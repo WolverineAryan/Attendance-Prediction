@@ -48,10 +48,9 @@ X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y, test_size=0.3, random_state=42
 )
 
-# ---- SIMPLER, WEAKER MODEL ----
 model = RandomForestClassifier(
-    n_estimators=40,          # very small
-    max_depth=4,              # restrict depth
+    n_estimators=40,          
+    max_depth=4,              
     min_samples_split=25,
     min_samples_leaf=15,
     class_weight="balanced",
