@@ -19,11 +19,7 @@ from ai_chat import ask_ollama
 app = Flask(__name__)
 
 # ================= CONFIG =================
-CORS(app, supports_credentials=True, resources={
-    r"/*": {
-        "origins": "https://attendance-prediction-l5rxmkb1n-wolverinearyans-projects.vercel.app"
-    }
-})
+CORS(app)
 
 
 app.config["JWT_SECRET_KEY"] = os.getenv(
@@ -51,6 +47,13 @@ print("✅ app.py loaded")
 model = joblib.load("attendance_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        return response
+    
 # ================= TEST ROUTE =================
 @app.route("/")
 def home():
