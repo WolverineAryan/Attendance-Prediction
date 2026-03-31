@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
-from fastapi.middleware.cors import CORSMiddleware
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -20,10 +19,11 @@ from ai_chat import ask_ollama
 app = Flask(__name__)
 
 # ================= CONFIG =================
-CORS(app, origins=[
-    "https://attendance-prediction-l5rxmkb1n-wolverinearyans-projects.vercel.app"
-])
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, resources={
+    r"/*": {
+        "origins": "https://attendance-prediction-l5rxmkb1n-wolverinearyans-projects.vercel.app"
+    }
+})
 
 
 app.config["JWT_SECRET_KEY"] = os.getenv(
@@ -57,8 +57,11 @@ def home():
     return "Backend running successfully"
 
 # ================= SIGNUP =================
-@app.route("/signup", methods=["POST"])
+@app.route("/signup", methods=["POST", "OPTIONS"])
 def signup():
+    if request.method == "OPTIONS":
+        return '', 200
+
     data = request.get_json()
 
     if User.query.filter_by(email=data.get("email")).first():
@@ -79,8 +82,11 @@ def signup():
 
 
 # ================= LOGIN =================
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["POST", "OPTIONS"])
 def login():
+    if request.method == "OPTIONS":
+        return '', 200
+
     data = request.get_json()
 
     user = User.query.filter_by(email=data.get("email")).first()
