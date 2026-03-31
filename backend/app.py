@@ -20,7 +20,10 @@ from ai_chat import ask_ollama
 app = Flask(__name__)
 
 # ================= CONFIG =================
-CORS(app)
+CORS(app, origins=[
+    "https://attendance-prediction-l5rxmkb1n-wolverinearyans-projects.vercel.app"
+])
+CORS(app, supports_credentials=True)
 
 
 app.config["JWT_SECRET_KEY"] = os.getenv(
