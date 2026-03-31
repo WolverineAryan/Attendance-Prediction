@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
-
+from fastapi.middleware.cors import CORSMiddleware
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -21,6 +21,7 @@ app = Flask(__name__)
 
 # ================= CONFIG =================
 CORS(app)
+
 
 app.config["JWT_SECRET_KEY"] = os.getenv(
     "JWT_SECRET_KEY",

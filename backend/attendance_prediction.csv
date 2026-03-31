@@ -1,6 +1,11 @@
-studentid,attendancepercentage,latedays,leaves,disciplinescore,attendancerisk,risk,risklevel,Predicted_Risk
-103,60,12,8,20,1,1,High,High Risk
-105,40,20,15,35,1,1,High,High Risk
-107,55,15,10,25,1,1,High,High Risk
-109,68,9,6,15,1,0,High,High Risk
-110,30,25,18,43,1,1,High,High Risk
+studentid,attendancepercentage,latedays,leaves,finalstatus,Predicted_Risk
+101,92,2,1,Present,High Risk
+102,85,5,3,Present,High Risk
+103,60,12,8,Absent,High Risk
+104,75,7,4,Present,High Risk
+105,40,20,15,Absent,High Risk
+106,88,3,2,Present,High Risk
+107,55,15,10,Absent,High Risk
+108,95,1,0,Present,High Risk
+109,68,9,6,Present,High Risk
+110,30,25,18,Absent,High Risk
